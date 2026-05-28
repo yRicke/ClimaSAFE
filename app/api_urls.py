@@ -9,6 +9,7 @@ from .api_views import (
     EquipeViewSet,
     FazendaViewSet,
     ProcessarAlertasAPIView,
+    ProcessarDadosClimaticosAPIView,
 )
 
 router = DefaultRouter()
@@ -20,6 +21,7 @@ router.register("atividades", AtividadeViewSet, basename="api-atividades")
 urlpatterns = [
     path("dashboard/", DashboardAPIView.as_view(), name="api-dashboard"),
     path("localizacao/", AtualizarLocalizacaoAPIView.as_view(), name="api-localizacao"),
+    path("processar-clima/", ProcessarDadosClimaticosAPIView.as_view(), name="api-processar-clima"),
     path("processar-alertas/", ProcessarAlertasAPIView.as_view(), name="api-processar-alertas"),
     path("", include(router.urls)),
 ]

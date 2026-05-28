@@ -65,6 +65,7 @@ class LocalizacaoSerializer(serializers.ModelSerializer):
             "latitude",
             "longitude",
             "horario",
+            "endereco_aproximado",
             "clima",
             "temperatura",
             "umidade",

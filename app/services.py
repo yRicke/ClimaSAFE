@@ -33,28 +33,48 @@ def limpar_alertas_antigos(localizacao: Localizacao) -> None:
 
 
 @transaction.atomic
-def atualizar_localizacao_fazenda(
+def salvar_localizacao_fazenda(
     fazenda: Fazenda,
     latitude: float,
     longitude: float,
     horario: str,
+    endereco_aproximado: str = "",
 ) -> Localizacao:
-    dados = buscar_dados_climaticos(latitude=latitude, longitude=longitude)
-
     localizacao, _ = Localizacao.objects.update_or_create(
         fazenda=fazenda,
         defaults={
             "latitude": Decimal(str(latitude)),
             "longitude": Decimal(str(longitude)),
             "horario": horario,
-            "clima": dados.clima,
-            "temperatura": dados.temperatura,
-            "umidade": dados.umidade,
-            "indice_calor": dados.indice_calor,
+            "endereco_aproximado": endereco_aproximado,
+            "clima": "",
+            "temperatura": None,
+            "umidade": None,
+            "indice_calor": None,
         },
     )
 
     limpar_alertas_antigos(localizacao)
+    return localizacao
+
+
+@transaction.atomic
+def processar_dados_climaticos_fazenda(fazenda: Fazenda) -> Localizacao:
+    localizacao = getattr(fazenda, "localizacao_ativa", None)
+    if not localizacao:
+        raise ValueError("Salve uma localização antes de processar dados climáticos.")
+
+    dados = buscar_dados_climaticos(
+        latitude=float(localizacao.latitude),
+        longitude=float(localizacao.longitude),
+    )
+
+    localizacao.clima = dados.clima
+    localizacao.temperatura = dados.temperatura
+    localizacao.umidade = dados.umidade
+    localizacao.indice_calor = dados.indice_calor
+    localizacao.save(update_fields=["clima", "temperatura", "umidade", "indice_calor", "atualizado_em"])
+
     return localizacao
 
 
@@ -193,7 +213,10 @@ def _peso_nivel(nivel: str) -> int:
 def processar_alertas_fazenda(fazenda: Fazenda):
     localizacao = getattr(fazenda, "localizacao_ativa", None)
     if not localizacao:
-        return []
+        raise ValueError("Salve uma localização antes de processar alertas.")
+
+    if localizacao.temperatura is None or localizacao.umidade is None or localizacao.indice_calor is None:
+        raise ValueError("Processe os dados climáticos antes de gerar alertas.")
 
     limpar_alertas_antigos(localizacao)
 
@@ -215,4 +238,3 @@ def processar_alertas_fazenda(fazenda: Fazenda):
             alertas.append(gerar_alerta_colaborador(localizacao, colaborador))
 
     return alertas
-

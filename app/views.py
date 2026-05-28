@@ -1,15 +1,19 @@
 ﻿from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
-from django.conf import settings
 
 from .forms import AtividadeForm, ColaboradorForm, EquipeForm, FazendaForm
 from .models import AlertaOperacional, Atividade, Colaborador, Equipe, Fazenda, Localizacao
-from .services import atualizar_localizacao_fazenda, processar_alertas_fazenda
+from .services import (
+    processar_alertas_fazenda,
+    processar_dados_climaticos_fazenda,
+    salvar_localizacao_fazenda,
+)
 
 
 class UserFormKwargsMixin:
@@ -26,6 +30,12 @@ def index(request):
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard.html"
+
+    @staticmethod
+    def _format_coord(value):
+        if value is None:
+            return ""
+        return f"{value:.6f}"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -45,13 +55,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             else AlertaOperacional.objects.none()
         )
 
+        latitude_value = self._format_coord(localizacao.latitude) if localizacao else ""
+        longitude_value = self._format_coord(localizacao.longitude) if localizacao else ""
+
         context.update(
             {
                 "fazendas": fazendas,
                 "fazenda_ativa": fazenda_ativa,
                 "localizacao": localizacao,
+                "latitude_value": latitude_value,
+                "longitude_value": longitude_value,
                 "alertas": alertas,
-                "google_maps_api_key": getattr(settings, "GOOGLE_MAPS_API_KEY", ""),
+                "map_tile_url": getattr(
+                    settings, "MAP_TILE_URL", "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                ),
             }
         )
         return context
@@ -64,19 +81,36 @@ def salvar_localizacao(request):
     latitude = request.POST.get("latitude")
     longitude = request.POST.get("longitude")
     horario = request.POST.get("horario")
+    endereco_aproximado = request.POST.get("endereco_aproximado", "")
 
     fazenda = get_object_or_404(Fazenda, id=fazenda_id, usuario=request.user)
 
     try:
-        atualizar_localizacao_fazenda(
+        salvar_localizacao_fazenda(
             fazenda=fazenda,
             latitude=float(latitude),
             longitude=float(longitude),
-            horario=horario,
+            horario=str(horario),
+            endereco_aproximado=endereco_aproximado,
         )
-        messages.success(request, "Localização atualizada com sucesso.")
-    except (TypeError, ValueError):
-        messages.error(request, "Latitude e longitude devem ser números válidos.")
+        messages.success(request, "Localização salva. Agora clique em 'Processar dados climáticos'.")
+    except (TypeError, ValueError) as exc:
+        messages.error(request, f"Erro ao salvar localização: {exc}")
+
+    return redirect(f"{reverse_lazy('dashboard')}?fazenda={fazenda.id}")
+
+
+@require_POST
+@login_required
+def processar_dados_climaticos(request):
+    fazenda_id = request.POST.get("fazenda")
+    fazenda = get_object_or_404(Fazenda, id=fazenda_id, usuario=request.user)
+
+    try:
+        processar_dados_climaticos_fazenda(fazenda)
+        messages.success(request, "Dados climáticos processados com sucesso.")
+    except ValueError as exc:
+        messages.error(request, str(exc))
     except RuntimeError as exc:
         messages.error(request, str(exc))
 
@@ -89,8 +123,11 @@ def processar_alertas(request):
     fazenda_id = request.POST.get("fazenda")
     fazenda = get_object_or_404(Fazenda, id=fazenda_id, usuario=request.user)
 
-    alertas = processar_alertas_fazenda(fazenda)
-    messages.success(request, f"{len(alertas)} alertas processados.")
+    try:
+        alertas = processar_alertas_fazenda(fazenda)
+        messages.success(request, f"{len(alertas)} alertas processados.")
+    except ValueError as exc:
+        messages.error(request, str(exc))
 
     return redirect(f"{reverse_lazy('dashboard')}?fazenda={fazenda.id}")
 
@@ -239,4 +276,3 @@ def atividade_delete(request, pk):
     atividade.delete()
     messages.success(request, "Atividade removida.")
     return redirect("atividade_list")
-

@@ -1,0 +1,25 @@
+﻿<div
+    class="map-widget js-location-picker"
+    data-map-id="{{ map_id|default:'location-map' }}"
+    data-endpoint="{{ location_endpoint|default:'/api/location/select/' }}"
+    data-lat-input-id="{{ lat_input_id|default:'latitude' }}"
+    data-lng-input-id="{{ lng_input_id|default:'longitude' }}"
+    data-address-input-id="{{ address_input_id|default:'address_preview' }}"
+    data-initial-lat="{{ initial_lat|default:'-14.2350' }}"
+    data-initial-lng="{{ initial_lng|default:'-51.9253' }}"
+    data-initial-zoom="{{ initial_zoom|default:'5' }}"
+    data-tile-url="{{ tile_url|default:'https://tile.openstreetmap.org/{z}/{x}/{y}.png' }}"
+>
+    <div class="map-toolbar">
+        <button type="button" class="btn btn-light js-use-current-location">Usar minha localização</button>
+        <span class="map-feedback js-map-feedback">Selecione um ponto no mapa.</span>
+    </div>
+
+    <div id="{{ map_id|default:'location-map' }}" class="leaflet-map" aria-label="Mapa interativo"></div>
+
+    <div class="map-meta">
+        <p><strong>Latitude:</strong> <span class="js-lat-value">-</span></p>
+        <p><strong>Longitude:</strong> <span class="js-lng-value">-</span></p>
+        <p><strong>Endereço aproximado:</strong> <span class="js-address-value">-</span></p>
+    </div>
+</div>

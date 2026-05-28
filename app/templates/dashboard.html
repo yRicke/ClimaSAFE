@@ -1,6 +1,12 @@
 ﻿{% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Dashboard | ClimaSAFE{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<link rel="stylesheet" href="{% static 'maps/css/location-picker.css' %}">
+{% endblock %}
 
 {% block content %}
 <section class="panel">
@@ -23,15 +29,19 @@
                 <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
 
                 <h3>Localização ativa da operação</h3>
-                <p id="map-status" class="hint">Clique no mapa para preencher latitude e longitude.</p>
+                <p class="hint">1) Selecione no mapa e salve. 2) Clique em processar dados climáticos.</p>
 
                 <div class="field-row">
                     <label for="latitude">Latitude</label>
-                    <input type="text" id="latitude" name="latitude" value="{{ localizacao.latitude|default:'' }}" required>
+                    <input type="text" id="latitude" name="latitude" value="{{ latitude_value }}" required>
                 </div>
                 <div class="field-row">
                     <label for="longitude">Longitude</label>
-                    <input type="text" id="longitude" name="longitude" value="{{ localizacao.longitude|default:'' }}" required>
+                    <input type="text" id="longitude" name="longitude" value="{{ longitude_value }}" required>
+                </div>
+                <div class="field-row">
+                    <label for="address_preview">Endereço aproximado</label>
+                    <input type="text" id="address_preview" name="endereco_aproximado" value="{{ localizacao.endereco_aproximado|default:'' }}" readonly>
                 </div>
                 <div class="field-row">
                     <label for="horario">Horário/turno</label>
@@ -39,6 +49,13 @@
                 </div>
 
                 <button type="submit" class="btn">Salvar localização</button>
+            </form>
+
+            <form method="post" action="{% url 'processar_dados_climaticos' %}" class="panel form-panel compact">
+                {% csrf_token %}
+                <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
+                <button type="submit" class="btn btn-warning">Processar dados climáticos</button>
+                <p class="hint">Busca clima atual para a localização salva e atualiza os cards.</p>
             </form>
 
             <form method="post" action="{% url 'processar_alertas' %}" class="panel form-panel compact">
@@ -55,21 +72,35 @@
                 </div>
                 <div class="info-card">
                     <span>Temperatura</span>
-                    <strong>{% if localizacao.temperatura %}{{ localizacao.temperatura }} °C{% else %}-{% endif %}</strong>
+                    <strong>{% if localizacao and localizacao.temperatura != None %}{{ localizacao.temperatura }} °C{% else %}-{% endif %}</strong>
                 </div>
                 <div class="info-card">
                     <span>Umidade</span>
-                    <strong>{% if localizacao.umidade %}{{ localizacao.umidade }} %{% else %}-{% endif %}</strong>
+                    <strong>{% if localizacao and localizacao.umidade != None %}{{ localizacao.umidade }} %{% else %}-{% endif %}</strong>
                 </div>
                 <div class="info-card">
                     <span>Índice de calor</span>
-                    <strong>{% if localizacao.indice_calor %}{{ localizacao.indice_calor }} °C{% else %}-{% endif %}</strong>
+                    <strong>{% if localizacao and localizacao.indice_calor != None %}{{ localizacao.indice_calor }} °C{% else %}-{% endif %}</strong>
                 </div>
+            </div>
+
+            <div class="panel compact">
+                <h4>Referência dos dados climáticos</h4>
+                <p><strong>Horário da operação:</strong> {{ localizacao.horario|default:'-' }}</p>
+                <p>
+                    <strong>Localização:</strong>
+                    {% if localizacao %}
+                        {{ latitude_value }}, {{ longitude_value }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
             </div>
         </div>
 
         <div class="right-col">
-            <div id="map"></div>
+            {% url 'api-location-select' as location_select_endpoint %}
+            {% include 'maps/location_picker.html' with map_id='dashboard-map' location_endpoint=location_select_endpoint lat_input_id='latitude' lng_input_id='longitude' address_input_id='address_preview' initial_lat=latitude_value|default:'-14.2350' initial_lng=longitude_value|default:'-51.9253' initial_zoom='5' tile_url=map_tile_url %}
         </div>
     </div>
 
@@ -98,62 +129,9 @@
     <a href="{% url 'fazenda_create' %}" class="btn">Nova fazenda</a>
     {% endif %}
 </section>
-
-<script>
-let map;
-
-function setCoordinates(lat, lng) {
-    document.getElementById('latitude').value = lat.toFixed(6);
-    document.getElementById('longitude').value = lng.toFixed(6);
-}
-
-function initMap() {
-    const mapElement = document.getElementById('map');
-    if (!mapElement) return;
-
-    const latInput = document.getElementById('latitude');
-    const lngInput = document.getElementById('longitude');
-
-    const lat = parseFloat(latInput.value) || -14.2350;
-    const lng = parseFloat(lngInput.value) || -51.9253;
-
-    map = new google.maps.Map(mapElement, {
-        center: { lat: lat, lng: lng },
-        zoom: 5,
-    });
-
-    let marker = new google.maps.Marker({
-        position: { lat: lat, lng: lng },
-        map: map,
-    });
-
-    map.addListener('click', function(event) {
-        const clickedLat = event.latLng.lat();
-        const clickedLng = event.latLng.lng();
-        setCoordinates(clickedLat, clickedLng);
-
-        marker.setMap(null);
-        marker = new google.maps.Marker({
-            position: { lat: clickedLat, lng: clickedLng },
-            map: map,
-        });
-    });
-}
-
-{% if google_maps_api_key %}
-window.initMap = initMap;
-{% else %}
-document.addEventListener('DOMContentLoaded', function() {
-    const status = document.getElementById('map-status');
-    if (status) {
-        status.textContent = 'GOOGLE_MAPS_API_KEY não configurada. Informe latitude/longitude manualmente.';
-    }
-});
-{% endif %}
-</script>
-
-{% if google_maps_api_key %}
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
-{% endif %}
 {% endblock %}
 
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="{% static 'maps/js/location-picker.js' %}"></script>
+{% endblock %}

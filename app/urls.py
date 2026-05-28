@@ -6,6 +6,11 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("dashboard/", views.DashboardView.as_view(), name="dashboard"),
     path("dashboard/salvar-localizacao/", views.salvar_localizacao, name="salvar_localizacao"),
+    path(
+        "dashboard/processar-dados-climaticos/",
+        views.processar_dados_climaticos,
+        name="processar_dados_climaticos",
+    ),
     path("dashboard/processar-alertas/", views.processar_alertas, name="processar_alertas"),
     path("fazendas/", views.FazendaListView.as_view(), name="fazenda_list"),
     path("fazendas/nova/", views.FazendaCreateView.as_view(), name="fazenda_create"),

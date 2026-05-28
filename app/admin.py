@@ -36,6 +36,7 @@ class LocalizacaoAdmin(admin.ModelAdmin):
         "latitude",
         "longitude",
         "horario",
+        "endereco_aproximado",
         "temperatura",
         "umidade",
         "indice_calor",

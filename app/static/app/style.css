@@ -72,12 +72,6 @@ body {
     margin-top: 1rem;
 }
 
-.right-col #map {
-    min-height: 420px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-}
-
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(120px, 1fr));
@@ -252,10 +246,6 @@ textarea {
 @media (max-width: 900px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
-    }
-
-    .right-col #map {
-        min-height: 300px;
     }
 }
 

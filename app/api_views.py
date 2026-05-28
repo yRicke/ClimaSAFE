@@ -12,7 +12,11 @@ from .serializers import (
     FazendaSerializer,
     LocalizacaoSerializer,
 )
-from .services import atualizar_localizacao_fazenda, processar_alertas_fazenda
+from .services import (
+    processar_alertas_fazenda,
+    processar_dados_climaticos_fazenda,
+    salvar_localizacao_fazenda,
+)
 
 
 class FazendaViewSet(viewsets.ModelViewSet):
@@ -91,6 +95,7 @@ class AtualizarLocalizacaoAPIView(APIView):
         latitude = request.data.get("latitude")
         longitude = request.data.get("longitude")
         horario = request.data.get("horario")
+        endereco_aproximado = request.data.get("endereco_aproximado", "")
 
         if not all([fazenda_id, latitude, longitude, horario]):
             return Response(
@@ -103,12 +108,38 @@ class AtualizarLocalizacaoAPIView(APIView):
             return Response({"detail": "Fazenda não encontrada."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            localizacao = atualizar_localizacao_fazenda(
+            localizacao = salvar_localizacao_fazenda(
                 fazenda=fazenda,
                 latitude=float(latitude),
                 longitude=float(longitude),
                 horario=str(horario),
+                endereco_aproximado=str(endereco_aproximado),
             )
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(LocalizacaoSerializer(localizacao).data, status=status.HTTP_200_OK)
+
+
+class ProcessarDadosClimaticosAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        fazenda_id = request.data.get("fazenda")
+        if not fazenda_id:
+            return Response(
+                {"detail": "Campo obrigatório: fazenda."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        fazenda = Fazenda.objects.filter(id=fazenda_id, usuario=request.user).first()
+        if not fazenda:
+            return Response({"detail": "Fazenda não encontrada."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            localizacao = processar_dados_climaticos_fazenda(fazenda)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         except RuntimeError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
@@ -130,6 +161,9 @@ class ProcessarAlertasAPIView(APIView):
         if not fazenda:
             return Response({"detail": "Fazenda não encontrada."}, status=status.HTTP_404_NOT_FOUND)
 
-        alertas = processar_alertas_fazenda(fazenda)
-        return Response(AlertaOperacionalSerializer(alertas, many=True).data, status=status.HTTP_200_OK)
+        try:
+            alertas = processar_alertas_fazenda(fazenda)
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
+        return Response(AlertaOperacionalSerializer(alertas, many=True).data, status=status.HTTP_200_OK)

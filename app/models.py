@@ -70,6 +70,7 @@ class Localizacao(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
     horario = models.CharField(max_length=80)
+    endereco_aproximado = models.CharField(max_length=255, blank=True)
     clima = models.CharField(max_length=80, blank=True)
     temperatura = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     umidade = models.PositiveSmallIntegerField(null=True, blank=True)
