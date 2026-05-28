@@ -1,0 +1,261 @@
+﻿:root {
+    --bg: #f1f4f8;
+    --panel: #ffffff;
+    --text: #1c2b39;
+    --primary: #0b63c8;
+    --primary-dark: #084e9a;
+    --muted: #667b8f;
+    --danger: #c62828;
+    --warning: #ef6c00;
+    --ok: #2e7d32;
+    --border: #d5e0ea;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+}
+
+.topbar {
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1.2rem;
+    flex-wrap: wrap;
+}
+
+.topbar nav {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.topbar a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-box {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.container {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.right-col #map {
+    min-height: 420px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.info-card {
+    background: #e6f0fb;
+    border: 1px solid #b9d5f7;
+    padding: 0.9rem;
+    border-radius: 8px;
+}
+
+.info-card span {
+    display: block;
+    color: #26496a;
+    font-size: 0.85rem;
+}
+
+.info-card strong {
+    font-size: 1.1rem;
+}
+
+.inline-form {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+}
+
+.field-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.7rem;
+}
+
+input,
+select,
+textarea {
+    padding: 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.55rem 0.8rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    background: var(--primary-dark);
+}
+
+.btn-light {
+    background: #e7eef6;
+    color: var(--text);
+}
+
+.btn-warning {
+    background: var(--warning);
+}
+
+.btn-danger {
+    background: var(--danger);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    border-bottom: 1px solid var(--border);
+    padding: 0.7rem;
+    text-align: left;
+}
+
+.actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.alert-list {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.alert-card {
+    border-radius: 8px;
+    padding: 0.7rem;
+    border: 1px solid transparent;
+}
+
+.nivel-baixo {
+    background: #e8f5e9;
+    border-color: #a5d6a7;
+}
+
+.nivel-atencao {
+    background: #fff8e1;
+    border-color: #ffd54f;
+}
+
+.nivel-alto {
+    background: #fff3e0;
+    border-color: #ffb74d;
+}
+
+.nivel-critico {
+    background: #ffebee;
+    border-color: #ef9a9a;
+}
+
+.messages {
+    margin-bottom: 1rem;
+}
+
+.message {
+    padding: 0.6rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.message.success {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+}
+
+.message.error {
+    background: #ffebee;
+    border: 1px solid #ef9a9a;
+}
+
+.hint {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.form-panel {
+    max-width: 600px;
+}
+
+.compact {
+    margin-top: 1rem;
+}
+
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .right-col #map {
+        min-height: 300px;
+    }
+}
+

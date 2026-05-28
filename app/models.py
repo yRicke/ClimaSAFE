@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+ï»¿from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -77,8 +77,8 @@ class Localizacao(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Localização"
-        verbose_name_plural = "Localizações"
+        verbose_name = "LocalizaÃ§Ã£o"
+        verbose_name_plural = "LocalizaÃ§Ãµes"
 
     def __str__(self) -> str:
         return f"{self.fazenda.nome} ({self.latitude}, {self.longitude})"
@@ -87,9 +87,9 @@ class Localizacao(models.Model):
 class AlertaOperacional(models.Model):
     class Niveis(models.TextChoices):
         BAIXO = "baixo", "Baixo"
-        ATENCAO = "atencao", "Atenção"
+        ATENCAO = "atencao", "AtenÃ§Ã£o"
         ALTO = "alto", "Alto"
-        CRITICO = "critico", "Crítico"
+        CRITICO = "critico", "CrÃ­tico"
 
     localizacao = models.ForeignKey(Localizacao, on_delete=models.CASCADE, related_name="alertas")
     colaborador = models.ForeignKey(
@@ -115,9 +115,10 @@ class AlertaOperacional(models.Model):
 
     def clean(self) -> None:
         if self.colaborador and self.equipe:
-            raise ValidationError("Alerta não pode estar vinculado a equipe e colaborador ao mesmo tempo.")
+            raise ValidationError("Alerta nÃ£o pode estar vinculado a equipe e colaborador ao mesmo tempo.")
         if not self.colaborador and not self.equipe:
             raise ValidationError("Alerta deve ser vinculado a uma equipe ou colaborador.")
 
     def __str__(self) -> str:
         return f"{self.get_nivel_display()} - {self.texto[:50]}"
+

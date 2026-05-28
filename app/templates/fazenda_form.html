@@ -1,0 +1,18 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Fazenda | ClimaSAFE{% endblock %}
+
+{% block content %}
+<section class="panel form-panel">
+    <h2>{% if object %}Editar fazenda{% else %}Nova fazenda{% endif %}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="actions">
+            <button type="submit" class="btn">Salvar</button>
+            <a href="{% url 'fazenda_list' %}" class="btn btn-light">Cancelar</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
+

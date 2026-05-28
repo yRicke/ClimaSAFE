@@ -1,0 +1,42 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ClimaSAFE{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'app/style.css' %}">
+</head>
+<body>
+    <header class="topbar">
+        <h1>ClimaSAFE</h1>
+        <nav>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'fazenda_list' %}">Fazendas</a>
+            <a href="{% url 'equipe_list' %}">Equipes</a>
+            <a href="{% url 'colaborador_list' %}">Colaboradores</a>
+            <a href="{% url 'atividade_list' %}">Atividades</a>
+        </nav>
+        <div class="auth-box">
+            <span>{{ request.user.username }}</span>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-light">Sair</button>
+            </form>
+        </div>
+    </header>
+
+    <main class="container">
+        {% if messages %}
+            <section class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </section>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
+

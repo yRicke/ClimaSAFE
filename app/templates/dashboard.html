@@ -1,0 +1,159 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Dashboard | ClimaSAFE{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <h2>Dashboard Operacional</h2>
+
+    {% if fazendas %}
+    <form method="get" class="inline-form">
+        <label for="fazenda">Fazenda ativa</label>
+        <select id="fazenda" name="fazenda" onchange="this.form.submit()">
+            {% for fazenda in fazendas %}
+                <option value="{{ fazenda.id }}" {% if fazenda_ativa and fazenda.id == fazenda_ativa.id %}selected{% endif %}>{{ fazenda.nome }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <div class="dashboard-grid">
+        <div class="left-col">
+            <form method="post" action="{% url 'salvar_localizacao' %}" class="panel form-panel">
+                {% csrf_token %}
+                <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
+
+                <h3>Localização ativa da operação</h3>
+                <p id="map-status" class="hint">Clique no mapa para preencher latitude e longitude.</p>
+
+                <div class="field-row">
+                    <label for="latitude">Latitude</label>
+                    <input type="text" id="latitude" name="latitude" value="{{ localizacao.latitude|default:'' }}" required>
+                </div>
+                <div class="field-row">
+                    <label for="longitude">Longitude</label>
+                    <input type="text" id="longitude" name="longitude" value="{{ localizacao.longitude|default:'' }}" required>
+                </div>
+                <div class="field-row">
+                    <label for="horario">Horário/turno</label>
+                    <input type="text" id="horario" name="horario" value="{{ localizacao.horario|default:'' }}" placeholder="Ex.: manhã, 07:00-12:00" required>
+                </div>
+
+                <button type="submit" class="btn">Salvar localização</button>
+            </form>
+
+            <form method="post" action="{% url 'processar_alertas' %}" class="panel form-panel compact">
+                {% csrf_token %}
+                <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
+                <button type="submit" class="btn btn-warning">Processar alertas</button>
+                <p class="hint">A geração de alertas é manual e sempre substitui os alertas antigos.</p>
+            </form>
+
+            <div class="cards-grid">
+                <div class="info-card">
+                    <span>Clima</span>
+                    <strong>{{ localizacao.clima|default:'-' }}</strong>
+                </div>
+                <div class="info-card">
+                    <span>Temperatura</span>
+                    <strong>{% if localizacao.temperatura %}{{ localizacao.temperatura }} °C{% else %}-{% endif %}</strong>
+                </div>
+                <div class="info-card">
+                    <span>Umidade</span>
+                    <strong>{% if localizacao.umidade %}{{ localizacao.umidade }} %{% else %}-{% endif %}</strong>
+                </div>
+                <div class="info-card">
+                    <span>Índice de calor</span>
+                    <strong>{% if localizacao.indice_calor %}{{ localizacao.indice_calor }} °C{% else %}-{% endif %}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-col">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <section class="panel">
+        <h3>Alertas operacionais</h3>
+        {% if alertas %}
+            <div class="alert-list">
+                {% for alerta in alertas %}
+                    <article class="alert-card nivel-{{ alerta.nivel }}">
+                        <p>{{ alerta.texto }}</p>
+                        <small>
+                            Nível: {{ alerta.get_nivel_display }} |
+                            {% if alerta.equipe %}Equipe: {{ alerta.equipe.nome }}{% endif %}
+                            {% if alerta.colaborador %}Colaborador: {{ alerta.colaborador.nome }}{% endif %}
+                        </small>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>Nenhum alerta gerado para a localização atual.</p>
+        {% endif %}
+    </section>
+
+    {% else %}
+    <p>Cadastre uma fazenda para começar.</p>
+    <a href="{% url 'fazenda_create' %}" class="btn">Nova fazenda</a>
+    {% endif %}
+</section>
+
+<script>
+let map;
+
+function setCoordinates(lat, lng) {
+    document.getElementById('latitude').value = lat.toFixed(6);
+    document.getElementById('longitude').value = lng.toFixed(6);
+}
+
+function initMap() {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+
+    const lat = parseFloat(latInput.value) || -14.2350;
+    const lng = parseFloat(lngInput.value) || -51.9253;
+
+    map = new google.maps.Map(mapElement, {
+        center: { lat: lat, lng: lng },
+        zoom: 5,
+    });
+
+    let marker = new google.maps.Marker({
+        position: { lat: lat, lng: lng },
+        map: map,
+    });
+
+    map.addListener('click', function(event) {
+        const clickedLat = event.latLng.lat();
+        const clickedLng = event.latLng.lng();
+        setCoordinates(clickedLat, clickedLng);
+
+        marker.setMap(null);
+        marker = new google.maps.Marker({
+            position: { lat: clickedLat, lng: clickedLng },
+            map: map,
+        });
+    });
+}
+
+{% if google_maps_api_key %}
+window.initMap = initMap;
+{% else %}
+document.addEventListener('DOMContentLoaded', function() {
+    const status = document.getElementById('map-status');
+    if (status) {
+        status.textContent = 'GOOGLE_MAPS_API_KEY não configurada. Informe latitude/longitude manualmente.';
+    }
+});
+{% endif %}
+</script>
+
+{% if google_maps_api_key %}
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap"></script>
+{% endif %}
+{% endblock %}
+

@@ -1,0 +1,40 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Fazendas | ClimaSAFE{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <div class="section-head">
+        <h2>Fazendas</h2>
+        <a href="{% url 'fazenda_create' %}" class="btn">Nova fazenda</a>
+    </div>
+
+    {% if fazendas %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for fazenda in fazendas %}
+                <tr>
+                    <td>{{ fazenda.nome }}</td>
+                    <td class="actions">
+                        <a href="{% url 'fazenda_update' fazenda.id %}" class="btn btn-light">Editar</a>
+                        <form method="post" action="{% url 'fazenda_delete' fazenda.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhuma fazenda cadastrada.</p>
+    {% endif %}
+</section>
+{% endblock %}
+

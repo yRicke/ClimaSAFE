@@ -1,0 +1,46 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Colaboradores | ClimaSAFE{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <div class="section-head">
+        <h2>Colaboradores</h2>
+        <a href="{% url 'colaborador_create' %}" class="btn">Novo colaborador</a>
+    </div>
+
+    {% if colaboradores %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Fazenda</th>
+                    <th>Equipe</th>
+                    <th>Jornada (h)</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for colaborador in colaboradores %}
+                <tr>
+                    <td>{{ colaborador.nome }}</td>
+                    <td>{{ colaborador.fazenda.nome }}</td>
+                    <td>{{ colaborador.equipe.nome|default:'-' }}</td>
+                    <td>{{ colaborador.jornada_horas }}</td>
+                    <td class="actions">
+                        <a href="{% url 'colaborador_update' colaborador.id %}" class="btn btn-light">Editar</a>
+                        <form method="post" action="{% url 'colaborador_delete' colaborador.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum colaborador cadastrado.</p>
+    {% endif %}
+</section>
+{% endblock %}
+

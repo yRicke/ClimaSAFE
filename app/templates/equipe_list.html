@@ -1,0 +1,42 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Equipes | ClimaSAFE{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <div class="section-head">
+        <h2>Equipes</h2>
+        <a href="{% url 'equipe_create' %}" class="btn">Nova equipe</a>
+    </div>
+
+    {% if equipes %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Fazenda</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for equipe in equipes %}
+                <tr>
+                    <td>{{ equipe.nome }}</td>
+                    <td>{{ equipe.fazenda.nome }}</td>
+                    <td class="actions">
+                        <a href="{% url 'equipe_update' equipe.id %}" class="btn btn-light">Editar</a>
+                        <form method="post" action="{% url 'equipe_delete' equipe.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhuma equipe cadastrada.</p>
+    {% endif %}
+</section>
+{% endblock %}
+

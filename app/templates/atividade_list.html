@@ -1,0 +1,42 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Atividades | ClimaSAFE{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <div class="section-head">
+        <h2>Atividades</h2>
+        <a href="{% url 'atividade_create' %}" class="btn">Nova atividade</a>
+    </div>
+
+    {% if atividades %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Atividade</th>
+                    <th>Colaborador</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for atividade in atividades %}
+                <tr>
+                    <td>{{ atividade.nome }}</td>
+                    <td>{{ atividade.colaborador.nome }}</td>
+                    <td class="actions">
+                        <a href="{% url 'atividade_update' atividade.id %}" class="btn btn-light">Editar</a>
+                        <form method="post" action="{% url 'atividade_delete' atividade.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhuma atividade cadastrada.</p>
+    {% endif %}
+</section>
+{% endblock %}
+
