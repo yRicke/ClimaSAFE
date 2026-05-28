@@ -5,7 +5,10 @@
 {% block content %}
 <section class="panel">
     <div class="section-head">
-        <h2>Atividades</h2>
+        <div>
+            <h2>Atividades</h2>
+            <p class="hint">Cadastre a atividade principal e intensidade para refinar os alertas.</p>
+        </div>
         <a href="{% url 'atividade_create' %}" class="btn">Nova atividade</a>
     </div>
 
@@ -37,7 +40,9 @@
             </tbody>
         </table>
     {% else %}
-        <p>Nenhuma atividade cadastrada.</p>
+        <div class="empty-state">
+            <p>Nenhuma atividade cadastrada.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

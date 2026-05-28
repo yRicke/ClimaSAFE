@@ -1,12 +1,12 @@
 ﻿.map-widget {
     border: 1px solid var(--border);
-    border-radius: 10px;
-    background: #fff;
-    padding: 0.75rem;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff, #f7fbf8);
+    padding: 0.8rem;
 }
 
 .map-widget.is-loading {
-    opacity: 0.8;
+    opacity: 0.78;
 }
 
 .map-toolbar {
@@ -19,8 +19,8 @@
 }
 
 .map-feedback {
-    color: var(--muted);
-    font-size: 0.9rem;
+    color: var(--text-soft);
+    font-size: 0.86rem;
 }
 
 .map-feedback.error {
@@ -29,28 +29,34 @@
 
 .leaflet-map {
     width: 100%;
-    min-height: 420px;
-    border-radius: 8px;
+    min-height: 430px;
+    border-radius: 12px;
     border: 1px solid var(--border);
 }
 
 .map-meta {
     display: grid;
-    grid-template-columns: repeat(3, minmax(160px, 1fr));
-    gap: 0.6rem;
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    gap: 0.55rem;
     margin-top: 0.7rem;
 }
 
 .map-meta p {
     margin: 0;
-    font-size: 0.92rem;
+    font-size: 0.86rem;
+    border: 1px solid var(--border);
+    background: #f4faf5;
+    border-radius: 10px;
+    padding: 0.52rem 0.58rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
     .leaflet-map {
-        min-height: 300px;
+        min-height: 320px;
     }
+}
 
+@media (max-width: 720px) {
     .map-meta {
         grid-template-columns: 1fr;
     }

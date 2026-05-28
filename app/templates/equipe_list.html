@@ -5,7 +5,10 @@
 {% block content %}
 <section class="panel">
     <div class="section-head">
-        <h2>Equipes</h2>
+        <div>
+            <h2>Equipes</h2>
+            <p class="hint">Organize os grupos operacionais por fazenda.</p>
+        </div>
         <a href="{% url 'equipe_create' %}" class="btn">Nova equipe</a>
     </div>
 
@@ -35,7 +38,9 @@
             </tbody>
         </table>
     {% else %}
-        <p>Nenhuma equipe cadastrada.</p>
+        <div class="empty-state">
+            <p>Nenhuma equipe cadastrada.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

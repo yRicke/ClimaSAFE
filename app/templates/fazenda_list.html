@@ -5,7 +5,10 @@
 {% block content %}
 <section class="panel">
     <div class="section-head">
-        <h2>Fazendas</h2>
+        <div>
+            <h2>Fazendas</h2>
+            <p class="hint">Base principal para equipes, colaboradores e localização ativa.</p>
+        </div>
         <a href="{% url 'fazenda_create' %}" class="btn">Nova fazenda</a>
     </div>
 
@@ -33,7 +36,9 @@
             </tbody>
         </table>
     {% else %}
-        <p>Nenhuma fazenda cadastrada.</p>
+        <div class="empty-state">
+            <p>Nenhuma fazenda cadastrada.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

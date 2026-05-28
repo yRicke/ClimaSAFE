@@ -5,7 +5,10 @@
 {% block content %}
 <section class="panel">
     <div class="section-head">
-        <h2>Colaboradores</h2>
+        <div>
+            <h2>Colaboradores</h2>
+            <p class="hint">Defina jornada e vínculo com equipe para alertas mais precisos.</p>
+        </div>
         <a href="{% url 'colaborador_create' %}" class="btn">Novo colaborador</a>
     </div>
 
@@ -39,7 +42,9 @@
             </tbody>
         </table>
     {% else %}
-        <p>Nenhum colaborador cadastrado.</p>
+        <div class="empty-state">
+            <p>Nenhum colaborador cadastrado.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

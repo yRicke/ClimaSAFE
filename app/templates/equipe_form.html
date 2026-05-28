@@ -5,6 +5,7 @@
 {% block content %}
 <section class="panel form-panel">
     <h2>{% if object %}Editar equipe{% else %}Nova equipe{% endif %}</h2>
+    <p class="hint">Vincule a equipe à fazenda correta para processamento de alertas em grupo.</p>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}

@@ -10,60 +10,75 @@
 
 {% block content %}
 <section class="panel">
-    <h2>Dashboard Operacional</h2>
-
     {% if fazendas %}
-    <form method="get" class="inline-form">
-        <label for="fazenda">Fazenda ativa</label>
-        <select id="fazenda" name="fazenda" onchange="this.form.submit()">
-            {% for fazenda in fazendas %}
-                <option value="{{ fazenda.id }}" {% if fazenda_ativa and fazenda.id == fazenda_ativa.id %}selected{% endif %}>{{ fazenda.nome }}</option>
-            {% endfor %}
-        </select>
-    </form>
+    <div class="section-head">
+        <div>
+            <h2>Dashboard Operacional</h2>
+            <p class="hint">Fluxo recomendado: Localização -> Clima -> Alertas.</p>
+        </div>
+        <form method="get" class="inline-form">
+            <label for="fazenda">Fazenda ativa</label>
+            <select id="fazenda" name="fazenda" onchange="this.form.submit()">
+                {% for fazenda in fazendas %}
+                    <option value="{{ fazenda.id }}" {% if fazenda_ativa and fazenda.id == fazenda_ativa.id %}selected{% endif %}>{{ fazenda.nome }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
 
-    <div class="dashboard-grid">
-        <div class="left-col">
-            <form method="post" action="{% url 'salvar_localizacao' %}" class="panel form-panel">
-                {% csrf_token %}
-                <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
-
-                <h3>Localização ativa da operação</h3>
-                <p class="hint">1) Selecione no mapa e salve. 2) Clique em processar dados climáticos.</p>
-
-                <div class="field-row">
-                    <label for="latitude">Latitude</label>
-                    <input type="text" id="latitude" name="latitude" value="{{ latitude_value }}" required>
+    <div class="dashboard-sections">
+        <section class="panel dash-section">
+            <div class="section-head">
+                <div>
+                    <h3>1) Localização Ativa</h3>
+                    <p class="hint">Selecione no mapa e salve as coordenadas da operação monitorada.</p>
                 </div>
-                <div class="field-row">
-                    <label for="longitude">Longitude</label>
-                    <input type="text" id="longitude" name="longitude" value="{{ longitude_value }}" required>
-                </div>
-                <div class="field-row">
-                    <label for="address_preview">Endereço aproximado</label>
-                    <input type="text" id="address_preview" name="endereco_aproximado" value="{{ localizacao.endereco_aproximado|default:'' }}" readonly>
-                </div>
-                <div class="field-row">
-                    <label for="horario">Horário/turno</label>
-                    <input type="text" id="horario" name="horario" value="{{ localizacao.horario|default:'' }}" placeholder="Ex.: manhã, 07:00-12:00" required>
-                </div>
+            </div>
 
-                <button type="submit" class="btn">Salvar localização</button>
-            </form>
+            <div class="location-layout">
+                <form method="post" action="{% url 'salvar_localizacao' %}" class="form-panel">
+                    {% csrf_token %}
+                    <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
 
-            <form method="post" action="{% url 'processar_dados_climaticos' %}" class="panel form-panel compact">
-                {% csrf_token %}
-                <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
-                <button type="submit" class="btn btn-warning">Processar dados climáticos</button>
-                <p class="hint">Busca clima atual para a localização salva e atualiza os cards.</p>
-            </form>
+                    <div class="field-row">
+                        <label for="latitude">Latitude</label>
+                        <input type="text" id="latitude" name="latitude" value="{{ latitude_value }}" required>
+                    </div>
+                    <div class="field-row">
+                        <label for="longitude">Longitude</label>
+                        <input type="text" id="longitude" name="longitude" value="{{ longitude_value }}" required>
+                    </div>
+                    <div class="field-row">
+                        <label for="address_preview">Endereço aproximado</label>
+                        <input type="text" id="address_preview" name="endereco_aproximado" value="{{ localizacao.endereco_aproximado|default:'' }}" readonly>
+                    </div>
+                    <div class="field-row">
+                        <label for="horario">Horário/turno</label>
+                        <input type="text" id="horario" name="horario" value="{{ localizacao.horario|default:'' }}" placeholder="Ex.: manhã, 07:00-12:00" required>
+                    </div>
 
-            <form method="post" action="{% url 'processar_alertas' %}" class="panel form-panel compact">
-                {% csrf_token %}
-                <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
-                <button type="submit" class="btn btn-warning">Processar alertas</button>
-                <p class="hint">A geração de alertas é manual e sempre substitui os alertas antigos.</p>
-            </form>
+                    <button type="submit" class="btn">Salvar localização</button>
+                </form>
+
+                <div>
+                    {% url 'api-location-select' as location_select_endpoint %}
+                    {% include 'maps/location_picker.html' with map_id='dashboard-map' location_endpoint=location_select_endpoint lat_input_id='latitude' lng_input_id='longitude' address_input_id='address_preview' initial_lat=latitude_value|default:'-14.2350' initial_lng=longitude_value|default:'-51.9253' initial_zoom='5' tile_url=map_tile_url %}
+                </div>
+            </div>
+        </section>
+
+        <section class="panel dash-section">
+            <div class="section-head">
+                <div>
+                    <h3>2) Clima</h3>
+                    <p class="hint">Processa os dados climáticos com base na localização salva.</p>
+                </div>
+                <form method="post" action="{% url 'processar_dados_climaticos' %}" class="inline-action-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
+                    <button type="submit" class="btn btn-warning">Processar dados climáticos</button>
+                </form>
+            </div>
 
             <div class="cards-grid">
                 <div class="info-card">
@@ -84,11 +99,10 @@
                 </div>
             </div>
 
-            <div class="panel compact">
-                <h4>Referência dos dados climáticos</h4>
-                <p><strong>Horário da operação:</strong> {{ localizacao.horario|default:'-' }}</p>
+            <div class="meta-row">
+                <p><strong>Horário referência:</strong> {{ localizacao.horario|default:'-' }}</p>
                 <p>
-                    <strong>Localização:</strong>
+                    <strong>Coordenadas:</strong>
                     {% if localizacao %}
                         {{ latitude_value }}, {{ longitude_value }}
                     {% else %}
@@ -96,37 +110,48 @@
                     {% endif %}
                 </p>
             </div>
-        </div>
+        </section>
 
-        <div class="right-col">
-            {% url 'api-location-select' as location_select_endpoint %}
-            {% include 'maps/location_picker.html' with map_id='dashboard-map' location_endpoint=location_select_endpoint lat_input_id='latitude' lng_input_id='longitude' address_input_id='address_preview' initial_lat=latitude_value|default:'-14.2350' initial_lng=longitude_value|default:'-51.9253' initial_zoom='5' tile_url=map_tile_url %}
-        </div>
+        <section class="panel dash-section">
+            <div class="section-head">
+                <div>
+                    <h3>3) Alertas Operacionais</h3>
+                    <p class="hint">Gera alertas considerando clima, jornada e intensidade das atividades.</p>
+                </div>
+                <form method="post" action="{% url 'processar_alertas' %}" class="inline-action-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="fazenda" value="{{ fazenda_ativa.id }}">
+                    <button type="submit" class="btn btn-warning">Processar alertas</button>
+                </form>
+            </div>
+
+            {% if alertas %}
+                <div class="alert-list">
+                    {% for alerta in alertas %}
+                        <article class="alert-card nivel-{{ alerta.nivel }}">
+                            <p>{{ alerta.texto }}</p>
+                            <small>
+                                Nível: {{ alerta.get_nivel_display }} |
+                                {% if alerta.equipe %}Equipe: {{ alerta.equipe.nome }}{% endif %}
+                                {% if alerta.colaborador %}Colaborador: {{ alerta.colaborador.nome }}{% endif %}
+                            </small>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>Nenhum alerta gerado para a localização atual.</p>
+                </div>
+            {% endif %}
+        </section>
     </div>
 
-    <section class="panel">
-        <h3>Alertas operacionais</h3>
-        {% if alertas %}
-            <div class="alert-list">
-                {% for alerta in alertas %}
-                    <article class="alert-card nivel-{{ alerta.nivel }}">
-                        <p>{{ alerta.texto }}</p>
-                        <small>
-                            Nível: {{ alerta.get_nivel_display }} |
-                            {% if alerta.equipe %}Equipe: {{ alerta.equipe.nome }}{% endif %}
-                            {% if alerta.colaborador %}Colaborador: {{ alerta.colaborador.nome }}{% endif %}
-                        </small>
-                    </article>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p>Nenhum alerta gerado para a localização atual.</p>
-        {% endif %}
-    </section>
-
     {% else %}
-    <p>Cadastre uma fazenda para começar.</p>
-    <a href="{% url 'fazenda_create' %}" class="btn">Nova fazenda</a>
+    <div class="empty-state">
+        <h3>Nenhuma fazenda cadastrada</h3>
+        <p class="hint">Cadastre sua primeira fazenda para iniciar o monitoramento.</p>
+        <a href="{% url 'fazenda_create' %}" class="btn">Nova fazenda</a>
+    </div>
     {% endif %}
 </section>
 {% endblock %}
