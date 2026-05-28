@@ -25,7 +25,7 @@ class ColaboradorAdmin(admin.ModelAdmin):
 
 @admin.register(Atividade)
 class AtividadeAdmin(admin.ModelAdmin):
-    list_display = ("nome", "colaborador")
+    list_display = ("nome", "intensidade", "colaborador")
     search_fields = ("nome", "colaborador__nome")
 
 

@@ -57,12 +57,17 @@ class Colaborador(models.Model):
 class Atividade(models.Model):
     colaborador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name="atividades")
     nome = models.CharField(max_length=150)
+    intensidade = models.PositiveSmallIntegerField(
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        help_text="Intensidade da atividade de 1 (leve) a 10 (muito pesada).",
+    )
 
     class Meta:
         ordering = ["nome"]
 
     def __str__(self) -> str:
-        return f"{self.nome} - {self.colaborador.nome}"
+        return f"{self.nome} (intensidade {self.intensidade}/10) - {self.colaborador.nome}"
 
 
 class Localizacao(models.Model):

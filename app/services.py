@@ -84,6 +84,7 @@ def classificar_risco(
     indice_calor: float,
     jornada_horas: int,
     atividade_nome: str = "",
+    intensidade_atividade: int = 5,
 ) -> ClassificacaoRisco:
     score = 0
 
@@ -97,8 +98,16 @@ def classificar_risco(
     if jornada_horas >= 7 and score >= 2:
         score = min(3, score + 1)
 
+    intensidade = max(1, min(10, int(intensidade_atividade or 5)))
+    if intensidade >= 9:
+        score = min(3, score + 1)
+    elif intensidade >= 7 and score >= 1:
+        score = min(3, score + 1)
+    elif intensidade >= 8 and score == 0:
+        score = 1
+
     atividade_normalizada = atividade_nome.strip().lower()
-    atividade_pesada = any(chave in atividade_normalizada for chave in ATIVIDADES_PESADAS)
+    atividade_pesada = any(chave in atividade_normalizada for chave in ATIVIDADES_PESADAS) or intensidade >= 7
 
     nivel_map = {
         0: AlertaOperacional.Niveis.BAIXO,
@@ -115,6 +124,9 @@ def classificar_risco(
     if atividade_pesada:
         max_exposicao = max(1.0, max_exposicao - 1.0)
         pausa = max(30, pausa - 30)
+    elif intensidade >= 5:
+        max_exposicao = max(1.0, max_exposicao - 0.5)
+        pausa = max(30, pausa - 15)
 
     return ClassificacaoRisco(
         nivel=nivel_map[score],
@@ -126,11 +138,12 @@ def classificar_risco(
 def montar_texto_alerta(
     alvo_nome: str,
     atividade_nome: str,
+    intensidade_atividade: int,
     risco: ClassificacaoRisco,
 ) -> str:
     atividade = atividade_nome or "atividade operacional"
     return (
-        f"{alvo_nome} não pode executar '{atividade}' por mais de "
+        f"{alvo_nome} não pode executar '{atividade}' (intensidade {intensidade_atividade}/10) por mais de "
         f"{risco.max_exposicao_horas:g}h seguidas. "
         f"Sugestão: pausas de 5 min a cada {risco.pausa_a_cada_min} min."
     )
@@ -143,6 +156,7 @@ def _atividade_principal_colaborador(colaborador: Colaborador) -> Optional[Ativi
 def gerar_alerta_colaborador(localizacao: Localizacao, colaborador: Colaborador) -> AlertaOperacional:
     atividade = _atividade_principal_colaborador(colaborador)
     atividade_nome = atividade.nome if atividade else "atividade não informada"
+    intensidade = atividade.intensidade if atividade else 5
 
     risco = classificar_risco(
         temperatura=float(localizacao.temperatura or 0),
@@ -150,9 +164,10 @@ def gerar_alerta_colaborador(localizacao: Localizacao, colaborador: Colaborador)
         indice_calor=float(localizacao.indice_calor or 0),
         jornada_horas=colaborador.jornada_horas,
         atividade_nome=atividade_nome,
+        intensidade_atividade=intensidade,
     )
 
-    texto = montar_texto_alerta(colaborador.nome, atividade_nome, risco)
+    texto = montar_texto_alerta(colaborador.nome, atividade_nome, intensidade, risco)
 
     return AlertaOperacional.objects.create(
         localizacao=localizacao,
@@ -169,10 +184,12 @@ def gerar_alerta_equipe(localizacao: Localizacao, equipe: Equipe) -> Optional[Al
 
     maior_risco = None
     atividade_referencia = "atividade operacional"
+    intensidade_referencia = 5
 
     for colaborador in colaboradores:
         atividade = _atividade_principal_colaborador(colaborador)
         atividade_nome = atividade.nome if atividade else "atividade não informada"
+        intensidade = atividade.intensidade if atividade else 5
 
         risco = classificar_risco(
             temperatura=float(localizacao.temperatura or 0),
@@ -180,16 +197,23 @@ def gerar_alerta_equipe(localizacao: Localizacao, equipe: Equipe) -> Optional[Al
             indice_calor=float(localizacao.indice_calor or 0),
             jornada_horas=colaborador.jornada_horas,
             atividade_nome=atividade_nome,
+            intensidade_atividade=intensidade,
         )
 
         if maior_risco is None or _peso_nivel(risco.nivel) > _peso_nivel(maior_risco.nivel):
             maior_risco = risco
             atividade_referencia = atividade_nome
+            intensidade_referencia = intensidade
 
     if maior_risco is None:
         return None
 
-    texto = montar_texto_alerta(f"Equipe {equipe.nome}", atividade_referencia, maior_risco)
+    texto = montar_texto_alerta(
+        f"Equipe {equipe.nome}",
+        atividade_referencia,
+        intensidade_referencia,
+        maior_risco,
+    )
 
     return AlertaOperacional.objects.create(
         localizacao=localizacao,

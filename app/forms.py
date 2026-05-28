@@ -49,7 +49,7 @@ class ColaboradorForm(forms.ModelForm):
 class AtividadeForm(forms.ModelForm):
     class Meta:
         model = Atividade
-        fields = ["colaborador", "nome"]
+        fields = ["colaborador", "nome", "intensidade"]
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)

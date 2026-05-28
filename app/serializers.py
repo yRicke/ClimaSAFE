@@ -47,7 +47,7 @@ class ColaboradorSerializer(serializers.ModelSerializer):
 class AtividadeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Atividade
-        fields = ["id", "colaborador", "nome"]
+        fields = ["id", "colaborador", "nome", "intensidade"]
 
     def validate_colaborador(self, colaborador):
         request = self.context["request"]
