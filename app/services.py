@@ -7,6 +7,7 @@ from typing import Optional
 from django.db import transaction
 
 from .models import AlertaOperacional, Atividade, Colaborador, Equipe, Fazenda, Localizacao
+from .openai_alert_service import gerar_texto_alerta_openai
 from .weather_service import buscar_dados_climaticos
 
 
@@ -135,7 +136,7 @@ def classificar_risco(
     )
 
 
-def montar_texto_alerta(
+def montar_texto_alerta_padrao(
     alvo_nome: str,
     atividade_nome: str,
     intensidade_atividade: int,
@@ -147,6 +148,37 @@ def montar_texto_alerta(
         f"{risco.max_exposicao_horas:g}h seguidas. "
         f"Sugestão: pausas de 5 min a cada {risco.pausa_a_cada_min} min."
     )
+
+
+def montar_texto_alerta(
+    localizacao: Localizacao,
+    alvo_nome: str,
+    atividade_nome: str,
+    intensidade_atividade: int,
+    risco: ClassificacaoRisco,
+    jornada_horas: int,
+    tipo_alvo: str,
+) -> str:
+    contexto = {
+        "tipo_alvo": tipo_alvo,
+        "alvo_nome": alvo_nome,
+        "atividade_nome": atividade_nome or "atividade operacional",
+        "intensidade_atividade": intensidade_atividade,
+        "nivel_risco": risco.nivel,
+        "max_exposicao_horas": risco.max_exposicao_horas,
+        "pausa_a_cada_min": risco.pausa_a_cada_min,
+        "jornada_horas": jornada_horas,
+        "clima": localizacao.clima,
+        "temperatura_c": float(localizacao.temperatura or 0),
+        "umidade_percentual": int(localizacao.umidade or 0),
+        "indice_calor_c": float(localizacao.indice_calor or 0),
+        "endereco_aproximado": localizacao.endereco_aproximado,
+    }
+    texto_openai = gerar_texto_alerta_openai(contexto)
+    if texto_openai:
+        return texto_openai
+
+    return montar_texto_alerta_padrao(alvo_nome, atividade_nome, intensidade_atividade, risco)
 
 
 def _atividade_principal_colaborador(colaborador: Colaborador) -> Optional[Atividade]:
@@ -167,7 +199,15 @@ def gerar_alerta_colaborador(localizacao: Localizacao, colaborador: Colaborador)
         intensidade_atividade=intensidade,
     )
 
-    texto = montar_texto_alerta(colaborador.nome, atividade_nome, intensidade, risco)
+    texto = montar_texto_alerta(
+        localizacao=localizacao,
+        alvo_nome=colaborador.nome,
+        atividade_nome=atividade_nome,
+        intensidade_atividade=intensidade,
+        risco=risco,
+        jornada_horas=colaborador.jornada_horas,
+        tipo_alvo="colaborador",
+    )
 
     return AlertaOperacional.objects.create(
         localizacao=localizacao,
@@ -185,6 +225,7 @@ def gerar_alerta_equipe(localizacao: Localizacao, equipe: Equipe) -> Optional[Al
     maior_risco = None
     atividade_referencia = "atividade operacional"
     intensidade_referencia = 5
+    jornada_referencia = 8
 
     for colaborador in colaboradores:
         atividade = _atividade_principal_colaborador(colaborador)
@@ -204,15 +245,19 @@ def gerar_alerta_equipe(localizacao: Localizacao, equipe: Equipe) -> Optional[Al
             maior_risco = risco
             atividade_referencia = atividade_nome
             intensidade_referencia = intensidade
+            jornada_referencia = colaborador.jornada_horas
 
     if maior_risco is None:
         return None
 
     texto = montar_texto_alerta(
-        f"Equipe {equipe.nome}",
-        atividade_referencia,
-        intensidade_referencia,
-        maior_risco,
+        localizacao=localizacao,
+        alvo_nome=f"Equipe {equipe.nome}",
+        atividade_nome=atividade_referencia,
+        intensidade_atividade=intensidade_referencia,
+        risco=maior_risco,
+        jornada_horas=jornada_referencia,
+        tipo_alvo="equipe",
     )
 
     return AlertaOperacional.objects.create(

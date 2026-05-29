@@ -33,6 +33,16 @@ def env_bool(name: str, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def env_float(name: str, default: float) -> float:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        return float(value.strip())
+    except ValueError:
+        return default
+
+
 load_env_file(ENV_PATH)
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "change-me-in-env")
@@ -120,4 +130,10 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 MAP_TILE_URL = os.getenv("MAP_TILE_URL", "https://tile.openstreetmap.org/{z}/{x}/{y}.png")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+OPENAI_ALERTS_ENABLED = env_bool("OPENAI_ALERTS_ENABLED", True)
+OPENAI_ALERT_MODEL = os.getenv("OPENAI_ALERT_MODEL", "gpt-5.4-mini").strip() or "gpt-5.4-mini"
+OPENAI_ALERT_REASONING_EFFORT = os.getenv("OPENAI_ALERT_REASONING_EFFORT", "low").strip().lower() or "low"
+OPENAI_ALERT_TEXT_VERBOSITY = os.getenv("OPENAI_ALERT_TEXT_VERBOSITY", "low").strip().lower() or "low"
+OPENAI_ALERT_TIMEOUT_SECONDS = env_float("OPENAI_ALERT_TIMEOUT_SECONDS", 20.0)
 
