@@ -11,11 +11,14 @@ import os
 import sqlite3
 from pathlib import Path
 
-from django.conf import settings
 from django.core.management import call_command
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "setup.settings")
+
+
+application = get_wsgi_application()
+app = application
 
 
 def _auth_user_table_exists(db_path: Path) -> bool:
@@ -36,6 +39,8 @@ def _run_migrations_once_on_vercel() -> None:
     if os.getenv("VERCEL") != "1":
         return
 
+    from django.conf import settings
+
     db_path = Path(str(settings.DATABASES["default"]["NAME"]))
     marker = Path("/tmp/.django_migrated")
 
@@ -45,7 +50,7 @@ def _run_migrations_once_on_vercel() -> None:
     try:
         call_command("migrate", interactive=False, run_syncdb=True, verbosity=0)
         if not _auth_user_table_exists(db_path):
-            raise RuntimeError("migrate executou, mas a tabela auth_user nao foi encontrada")
+            raise RuntimeError("migrate ran but auth_user table was not created")
         marker.touch()
     except Exception as exc:
         print(f"[wsgi] migrate on startup failed: {exc}")
@@ -53,5 +58,3 @@ def _run_migrations_once_on_vercel() -> None:
 
 
 _run_migrations_once_on_vercel()
-application = get_wsgi_application()
-app = application
