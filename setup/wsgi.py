@@ -1,4 +1,4 @@
-"""
+﻿"""
 WSGI config for setup project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
@@ -8,28 +8,48 @@ https://docs.djangoproject.com/en/6.0/howto/deployment/wsgi/
 """
 
 import os
+import sqlite3
 from pathlib import Path
 
+from django.conf import settings
 from django.core.management import call_command
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'setup.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "setup.settings")
+
+
+def _auth_user_table_exists(db_path: Path) -> bool:
+    if not db_path.exists():
+        return False
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='auth_user'"
+            )
+            return cursor.fetchone() is not None
+    except sqlite3.Error:
+        return False
 
 
 def _run_migrations_once_on_vercel() -> None:
     if os.getenv("VERCEL") != "1":
         return
 
+    db_path = Path(str(settings.DATABASES["default"]["NAME"]))
     marker = Path("/tmp/.django_migrated")
-    if marker.exists():
+
+    if marker.exists() and _auth_user_table_exists(db_path):
         return
 
     try:
         call_command("migrate", interactive=False, run_syncdb=True, verbosity=0)
+        if not _auth_user_table_exists(db_path):
+            raise RuntimeError("migrate executou, mas a tabela auth_user nao foi encontrada")
         marker.touch()
     except Exception as exc:
-        # Evita crash no cold start; detalhes ficam no log da função.
         print(f"[wsgi] migrate on startup failed: {exc}")
+        raise
 
 
 _run_migrations_once_on_vercel()
