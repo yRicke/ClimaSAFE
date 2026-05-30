@@ -24,9 +24,14 @@ def _run_migrations_once_on_vercel() -> None:
     if marker.exists():
         return
 
-    call_command("migrate", interactive=False, run_syncdb=True, verbosity=0)
-    marker.touch()
+    try:
+        call_command("migrate", interactive=False, run_syncdb=True, verbosity=0)
+        marker.touch()
+    except Exception as exc:
+        # Evita crash no cold start; detalhes ficam no log da função.
+        print(f"[wsgi] migrate on startup failed: {exc}")
 
 
 _run_migrations_once_on_vercel()
 application = get_wsgi_application()
+app = application
