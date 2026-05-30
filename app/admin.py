@@ -18,7 +18,7 @@ class EquipeAdmin(admin.ModelAdmin):
 
 @admin.register(Colaborador)
 class ColaboradorAdmin(admin.ModelAdmin):
-    list_display = ("nome", "fazenda", "equipe", "jornada_horas")
+    list_display = ("nome", "idade", "sexo", "fazenda", "equipe", "jornada_horas")
     search_fields = ("nome",)
     list_filter = ("fazenda", "equipe")
 

@@ -25,7 +25,7 @@ class EquipeSerializer(serializers.ModelSerializer):
 class ColaboradorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Colaborador
-        fields = ["id", "fazenda", "equipe", "nome", "jornada_horas"]
+        fields = ["id", "fazenda", "equipe", "nome", "idade", "sexo", "jornada_horas"]
 
     def validate(self, attrs):
         request = self.context["request"]

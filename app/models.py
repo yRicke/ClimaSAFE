@@ -28,6 +28,12 @@ class Equipe(models.Model):
 
 
 class Colaborador(models.Model):
+    class Sexos(models.TextChoices):
+        MASCULINO = "masculino", "Masculino"
+        FEMININO = "feminino", "Feminino"
+        OUTRO = "outro", "Outro"
+        NAO_INFORMADO = "nao_informado", "Prefiro não informar"
+
     fazenda = models.ForeignKey(Fazenda, on_delete=models.CASCADE, related_name="colaboradores")
     equipe = models.ForeignKey(
         Equipe,
@@ -37,6 +43,15 @@ class Colaborador(models.Model):
         related_name="colaboradores",
     )
     nome = models.CharField(max_length=120)
+    idade = models.PositiveSmallIntegerField(
+        default=30,
+        validators=[MinValueValidator(14), MaxValueValidator(100)],
+    )
+    sexo = models.CharField(
+        max_length=20,
+        choices=Sexos.choices,
+        default=Sexos.NAO_INFORMADO,
+    )
     jornada_horas = models.PositiveSmallIntegerField(
         default=8,
         validators=[MinValueValidator(1), MaxValueValidator(24)],

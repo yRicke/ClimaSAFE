@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import logging
@@ -14,11 +14,12 @@ logger = logging.getLogger(__name__)
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 
 ALERTA_INSTRUCTIONS = (
-    "Você gera alertas operacionais curtos em português do Brasil para trabalho rural. "
-    "Mantenha o mesmo sentido técnico do contexto, mas escreva de forma natural, direta e variada. "
-    "O alerta deve citar o alvo, a atividade, a intensidade, o limite de exposição e a frequência de pausas. "
-    "Use no máximo 2 frases curtas, sem título, sem listas, sem markdown, sem aspas e sem inventar dados. "
-    "O texto precisa continuar objetivo e acionável."
+    "Voce gera alertas operacionais curtos em portugues do Brasil para trabalho rural. "
+    "Mantenha o mesmo sentido tecnico do contexto, mas escreva de forma natural, direta e variada. "
+    "O alerta deve citar o alvo, a atividade, a intensidade, o limite de exposicao e a frequencia de pausas. "
+    "Considere tambem idade e sexo do trabalhador quando esses campos estiverem no contexto. "
+    "Use no maximo 2 frases curtas, sem titulo, sem listas, sem markdown, sem aspas e sem inventar dados. "
+    "O texto precisa continuar objetivo e acionavel."
 )
 
 
@@ -61,7 +62,7 @@ def gerar_texto_alerta_openai(contexto: dict[str, Any]) -> Optional[str]:
 
     texto = _extrair_output_text(body)
     if not texto:
-        logger.warning("Resposta da OpenAI sem texto utilizável para alerta.")
+        logger.warning("Resposta da OpenAI sem texto utilizavel para alerta.")
         return None
 
     return _normalizar_texto_alerta(texto)

@@ -17,6 +17,8 @@
             <thead>
                 <tr>
                     <th>Nome</th>
+                    <th>Idade</th>
+                    <th>Sexo</th>
                     <th>Fazenda</th>
                     <th>Equipe</th>
                     <th>Jornada (h)</th>
@@ -27,6 +29,8 @@
             {% for colaborador in colaboradores %}
                 <tr>
                     <td>{{ colaborador.nome }}</td>
+                    <td>{{ colaborador.idade }}</td>
+                    <td>{{ colaborador.get_sexo_display }}</td>
                     <td>{{ colaborador.fazenda.nome }}</td>
                     <td>{{ colaborador.equipe.nome|default:'-' }}</td>
                     <td>{{ colaborador.jornada_horas }}</td>

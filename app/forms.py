@@ -24,7 +24,7 @@ class EquipeForm(forms.ModelForm):
 class ColaboradorForm(forms.ModelForm):
     class Meta:
         model = Colaborador
-        fields = ["fazenda", "equipe", "nome", "jornada_horas"]
+        fields = ["fazenda", "equipe", "nome", "idade", "sexo", "jornada_horas"]
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)

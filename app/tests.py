@@ -1,4 +1,4 @@
-import json
+﻿import json
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
@@ -28,28 +28,38 @@ class AlertasOpenAITestCase(TestCase):
         )
         self.colaborador = Colaborador.objects.create(
             fazenda=self.fazenda,
-            nome="João",
+            nome="Joao",
+            idade=30,
+            sexo=Colaborador.Sexos.MASCULINO,
             jornada_horas=8,
         )
         Atividade.objects.create(
             colaborador=self.colaborador,
             nome="colheita",
             intensidade=9,
+            descricao="Colheita manual com carregamento de sacas sob sol.",
         )
 
-    @patch("app.services.gerar_texto_alerta_openai", return_value="João deve limitar a colheita intensa a 1h seguida e fazer pausas de 5 min a cada 30 min.")
+    @patch(
+        "app.services.gerar_texto_alerta_openai",
+        return_value=(
+            "Joao deve limitar a colheita intensa a 1h seguida e fazer pausas de 5 min a cada 30 min."
+        ),
+    )
     def test_processar_alertas_usa_texto_da_openai_quando_disponivel(self, mock_openai):
         alertas = processar_alertas_fazenda(self.fazenda)
 
         self.assertEqual(len(alertas), 1)
         self.assertEqual(
             alertas[0].texto,
-            "João deve limitar a colheita intensa a 1h seguida e fazer pausas de 5 min a cada 30 min.",
+            "Joao deve limitar a colheita intensa a 1h seguida e fazer pausas de 5 min a cada 30 min.",
         )
         contexto = mock_openai.call_args.args[0]
-        self.assertEqual(contexto["alvo_nome"], "João")
+        self.assertEqual(contexto["alvo_nome"], "Joao")
         self.assertEqual(contexto["atividade_nome"], "colheita")
         self.assertEqual(contexto["nivel_risco"], "critico")
+        self.assertEqual(contexto["idade"], 30)
+        self.assertEqual(contexto["sexo"], "masculino")
         self.assertEqual(contexto["temperatura_c"], 34.0)
 
     @patch("app.services.gerar_texto_alerta_openai", return_value=None)
@@ -59,8 +69,8 @@ class AlertasOpenAITestCase(TestCase):
         self.assertEqual(len(alertas), 1)
         self.assertEqual(
             alertas[0].texto,
-            "João não pode executar 'colheita' (intensidade 9/10) por mais de 1h seguidas. "
-            "Sugestão: pausas de 5 min a cada 30 min.",
+            "Joao não pode executar 'colheita' (intensidade 9/10) por mais de 1h seguidas, "
+            "considerando perfil (idade 30 e sexo masculino). Sugestão: pausas de 5 min a cada 30 min.",
         )
 
     @override_settings(
@@ -81,7 +91,9 @@ class AlertasOpenAITestCase(TestCase):
                     "content": [
                         {
                             "type": "output_text",
-                            "text": "Equipe Campo Sul deve reduzir a exposição a 2h e manter pausas de 5 min a cada 60 min.",
+                            "text": (
+                                "Equipe Campo Sul deve reduzir a exposicao a 2h e manter pausas de 5 min a cada 60 min."
+                            ),
                         }
                     ],
                 },
@@ -96,12 +108,14 @@ class AlertasOpenAITestCase(TestCase):
                 "alvo_nome": "Equipe Campo Sul",
                 "atividade_nome": "capina",
                 "nivel_risco": "alto",
+                "idade": 44,
+                "sexo": "feminino",
             }
         )
 
         self.assertEqual(
             texto,
-            "Equipe Campo Sul deve reduzir a exposição a 2h e manter pausas de 5 min a cada 60 min.",
+            "Equipe Campo Sul deve reduzir a exposicao a 2h e manter pausas de 5 min a cada 60 min.",
         )
         request = mock_urlopen.call_args.args[0]
         payload = json.loads(request.data.decode("utf-8"))
@@ -113,7 +127,7 @@ class AlertasOpenAITestCase(TestCase):
     @override_settings(OPENAI_API_KEY="", OPENAI_ALERTS_ENABLED=True)
     @patch("app.openai_alert_service.urlopen")
     def test_gerar_texto_alerta_openai_retorna_none_sem_chave(self, mock_urlopen):
-        texto = gerar_texto_alerta_openai({"alvo_nome": "João"})
+        texto = gerar_texto_alerta_openai({"alvo_nome": "Joao"})
 
         self.assertIsNone(texto)
         mock_urlopen.assert_not_called()
@@ -126,6 +140,8 @@ class AtividadeOpenAITestCase(TestCase):
         self.colaborador = Colaborador.objects.create(
             fazenda=self.fazenda,
             nome="Carlos",
+            idade=32,
+            sexo=Colaborador.Sexos.MASCULINO,
             jornada_horas=8,
         )
 

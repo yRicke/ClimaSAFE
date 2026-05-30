@@ -5,7 +5,7 @@
 {% block content %}
 <section class="panel form-panel">
     <h2>{% if object %}Editar colaborador{% else %}Novo colaborador{% endif %}</h2>
-    <p class="hint">Informe a jornada e, se existir, a equipe do colaborador.</p>
+    <p class="hint">Informe idade, sexo, jornada e equipe. Esses dados são considerados na geração dos alertas.</p>
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
