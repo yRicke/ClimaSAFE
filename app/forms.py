@@ -24,11 +24,21 @@ class EquipeForm(forms.ModelForm):
 class ColaboradorForm(forms.ModelForm):
     class Meta:
         model = Colaborador
-        fields = ["fazenda", "equipe", "nome", "idade", "sexo", "jornada_horas"]
+        fields = ["fazenda", "equipe", "nome", "idade", "sexo", "detalhes_extras", "jornada_horas"]
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["equipe"].required = False
+        self.fields["detalhes_extras"].required = False
+        self.fields["detalhes_extras"].widget.attrs.update(
+            {
+                "rows": 4,
+                "placeholder": (
+                    "Ex.: hipertensao controlada, ansiedade em tratamento, "
+                    "restricao medica para calor intenso."
+                ),
+            }
+        )
 
         if user is not None:
             fazendas = Fazenda.objects.filter(usuario=user)

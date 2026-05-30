@@ -52,6 +52,11 @@ class Colaborador(models.Model):
         choices=Sexos.choices,
         default=Sexos.NAO_INFORMADO,
     )
+    detalhes_extras = models.TextField(
+        blank=True,
+        default="",
+        help_text="Informe doencas, fatores psicologicos e outros cuidados relevantes do colaborador.",
+    )
     jornada_horas = models.PositiveSmallIntegerField(
         default=8,
         validators=[MinValueValidator(1), MaxValueValidator(24)],

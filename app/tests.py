@@ -31,6 +31,7 @@ class AlertasOpenAITestCase(TestCase):
             nome="Joao",
             idade=30,
             sexo=Colaborador.Sexos.MASCULINO,
+            detalhes_extras="Hipertensao controlada e ansiedade em acompanhamento.",
             jornada_horas=8,
         )
         Atividade.objects.create(
@@ -60,6 +61,10 @@ class AlertasOpenAITestCase(TestCase):
         self.assertEqual(contexto["nivel_risco"], "critico")
         self.assertEqual(contexto["idade"], 30)
         self.assertEqual(contexto["sexo"], "masculino")
+        self.assertEqual(
+            contexto["detalhes_extras"],
+            "Hipertensao controlada e ansiedade em acompanhamento",
+        )
         self.assertEqual(contexto["temperatura_c"], 34.0)
 
     @patch("app.services.gerar_texto_alerta_openai", return_value=None)
@@ -70,7 +75,8 @@ class AlertasOpenAITestCase(TestCase):
         self.assertEqual(
             alertas[0].texto,
             "Joao não pode executar 'colheita' (intensidade 9/10) por mais de 1h seguidas, "
-            "considerando perfil (idade 30 e sexo masculino). Sugestão: pausas de 5 min a cada 30 min.",
+            "considerando perfil (idade 30 e sexo masculino). Sugestão: pausas de 5 min a cada 30 min. "
+            "Cuidados adicionais informados: Hipertensao controlada e ansiedade em acompanhamento.",
         )
 
     @override_settings(

@@ -16,6 +16,7 @@ urlpatterns = [
     path("fazendas/nova/", views.FazendaCreateView.as_view(), name="fazenda_create"),
     path("fazendas/<int:pk>/editar/", views.FazendaUpdateView.as_view(), name="fazenda_update"),
     path("fazendas/<int:pk>/excluir/", views.fazenda_delete, name="fazenda_delete"),
+    path("fazendas/<int:pk>/relatorio/", views.fazenda_baixar_relatorio, name="fazenda_baixar_relatorio"),
     path("equipes/", views.EquipeListView.as_view(), name="equipe_list"),
     path("equipes/nova/", views.EquipeCreateView.as_view(), name="equipe_create"),
     path("equipes/<int:pk>/editar/", views.EquipeUpdateView.as_view(), name="equipe_update"),

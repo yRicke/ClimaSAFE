@@ -17,7 +17,8 @@ ALERTA_INSTRUCTIONS = (
     "Voce gera alertas operacionais curtos em portugues do Brasil para trabalho rural. "
     "Mantenha o mesmo sentido tecnico do contexto, mas escreva de forma natural, direta e variada. "
     "O alerta deve citar o alvo, a atividade, a intensidade, o limite de exposicao e a frequencia de pausas. "
-    "Considere tambem idade e sexo do trabalhador quando esses campos estiverem no contexto. "
+    "Considere tambem idade, sexo e detalhes extras de saude/psicologicos quando esses campos estiverem no contexto. "
+    "Mantenha tom tranquilo e sem alarmismo, com orientacao pratica. "
     "Use no maximo 2 frases curtas, sem titulo, sem listas, sem markdown, sem aspas e sem inventar dados. "
     "O texto precisa continuar objetivo e acionavel."
 )

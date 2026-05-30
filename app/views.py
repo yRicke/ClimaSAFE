@@ -1,8 +1,13 @@
-﻿from django.contrib import messages
+﻿import csv
+
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
+from django.utils.text import slugify
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, ListView, TemplateView, UpdateView
@@ -171,6 +176,78 @@ def fazenda_delete(request, pk):
     return redirect("fazenda_list")
 
 
+@login_required
+def fazenda_baixar_relatorio(request, pk):
+    fazenda = get_object_or_404(Fazenda, pk=pk, usuario=request.user)
+
+    alertas = AlertaOperacional.objects.filter(localizacao__fazenda=fazenda).select_related(
+        "colaborador", "equipe", "localizacao"
+    )
+    colaboradores_total = Colaborador.objects.filter(fazenda=fazenda).count()
+    equipes_total = Equipe.objects.filter(fazenda=fazenda).count()
+    colaboradores_com_alerta = Colaborador.objects.filter(
+        alertas__localizacao__fazenda=fazenda
+    ).distinct().count()
+    equipes_com_alerta = Equipe.objects.filter(alertas__localizacao__fazenda=fazenda).distinct().count()
+
+    total_alertas = alertas.count()
+    tipos_alerta = {
+        choice_value: alertas.filter(nivel=choice_value).count()
+        for choice_value, _choice_label in AlertaOperacional.Niveis.choices
+    }
+
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    nome_base = slugify(fazenda.nome) or f"fazenda-{fazenda.id}"
+    timestamp = timezone.localtime().strftime("%Y%m%d-%H%M")
+    response["Content-Disposition"] = f'attachment; filename="relatorio-{nome_base}-{timestamp}.csv"'
+    response.write("\ufeff")
+
+    writer = csv.writer(response, delimiter=";")
+
+    writer.writerow(["Relatorio de Alertas - ClimaSAFE"])
+    writer.writerow(["Gerado em", timezone.localtime().strftime("%d/%m/%Y %H:%M")])
+    writer.writerow(["Fazenda", fazenda.nome])
+    writer.writerow([])
+
+    writer.writerow(["KPIs"])
+    writer.writerow(["Total de alertas gerados", total_alertas])
+    writer.writerow(["Tipos de alertas - Baixo", tipos_alerta.get(AlertaOperacional.Niveis.BAIXO, 0)])
+    writer.writerow(["Tipos de alertas - Atencao", tipos_alerta.get(AlertaOperacional.Niveis.ATENCAO, 0)])
+    writer.writerow(["Tipos de alertas - Alto", tipos_alerta.get(AlertaOperacional.Niveis.ALTO, 0)])
+    writer.writerow(["Tipos de alertas - Critico", tipos_alerta.get(AlertaOperacional.Niveis.CRITICO, 0)])
+    writer.writerow(["Funcionarios monitorados (cadastro total)", colaboradores_total])
+    writer.writerow(["Funcionarios com alerta", colaboradores_com_alerta])
+    writer.writerow(["Equipes monitoradas (cadastro total)", equipes_total])
+    writer.writerow(["Equipes com alerta", equipes_com_alerta])
+    writer.writerow([])
+
+    writer.writerow(["Detalhamento dos alertas"])
+    writer.writerow(["Data/Hora", "Nivel", "Tipo de alvo", "Alvo", "Texto"])
+
+    for alerta in alertas.order_by("-criado_em"):
+        if alerta.colaborador_id:
+            tipo_alvo = "Colaborador"
+            alvo = alerta.colaborador.nome
+        elif alerta.equipe_id:
+            tipo_alvo = "Equipe"
+            alvo = alerta.equipe.nome
+        else:
+            tipo_alvo = "Nao informado"
+            alvo = "-"
+
+        writer.writerow(
+            [
+                timezone.localtime(alerta.criado_em).strftime("%d/%m/%Y %H:%M"),
+                alerta.get_nivel_display(),
+                tipo_alvo,
+                alvo,
+                alerta.texto,
+            ]
+        )
+
+    return response
+
+
 class EquipeListView(LoginRequiredMixin, ListView):
     model = Equipe
     template_name = "equipe_list.html"
@@ -300,3 +377,5 @@ def atividade_delete(request, pk):
     atividade.delete()
     messages.success(request, "Atividade removida.")
     return redirect("atividade_list")
+
+

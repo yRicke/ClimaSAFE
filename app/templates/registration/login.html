@@ -4,25 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | ClimaSAFE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/app/style.css">
 </head>
 <body>
-    <main class="auth-container">
-        <section class="panel form-panel">
+    <main class="auth-shell">
+        <section class="auth-intro">
+            <p class="auth-kicker">Plataforma operacional</p>
             <h1>ClimaSAFE</h1>
-            <h2>Entrar</h2>
+            <p>
+                Monitore clima, risco termico e alertas da equipe em um unico painel.
+                Entre para continuar a gestao preventiva.
+            </p>
+            <ul class="auth-points">
+                <li>Dados climaticos por localizacao da fazenda</li>
+                <li>Alertas operacionais com IA e fallback local</li>
+                <li>Visao integrada de equipes, colaboradores e atividades</li>
+            </ul>
+        </section>
+
+        <section class="auth-card">
+            <div class="auth-card-head">
+                <h2>Entrar na conta</h2>
+                <p>Use seu usuario e senha cadastrados no sistema.</p>
+            </div>
+            <div class="message success">
+                Usuario de teste: <strong>teste</strong><br>
+                Senha de teste: <strong>teste 123</strong>
+            </div>
 
             {% if form.errors %}
-                <div class="message error">Usuário ou senha inválidos.</div>
+                <div class="message error">Usuario ou senha invalidos.</div>
             {% endif %}
 
-            <form method="post">
+            <form method="post" class="auth-form">
                 {% csrf_token %}
-                {{ form.as_p }}
+                <div class="field-row">
+                    <label for="{{ form.username.id_for_label }}">Usuario</label>
+                    {{ form.username }}
+                </div>
+                <div class="field-row">
+                    <label for="{{ form.password.id_for_label }}">Senha</label>
+                    {{ form.password }}
+                </div>
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
                 <button type="submit" class="btn">Entrar</button>
             </form>
+            <p class="auth-footer">Acesso restrito. Em caso de duvida, fale com o administrador.</p>
         </section>
     </main>
 </body>
 </html>
-

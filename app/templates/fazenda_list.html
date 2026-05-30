@@ -25,6 +25,7 @@
                 <tr>
                     <td>{{ fazenda.nome }}</td>
                     <td class="actions">
+                        <a href="{% url 'fazenda_baixar_relatorio' fazenda.id %}" class="btn btn-warning">Baixar relatório</a>
                         <a href="{% url 'fazenda_update' fazenda.id %}" class="btn btn-light">Editar</a>
                         <form method="post" action="{% url 'fazenda_delete' fazenda.id %}">
                             {% csrf_token %}

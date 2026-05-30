@@ -480,6 +480,102 @@ textarea:focus {
     width: min(440px, 100%);
 }
 
+.auth-shell {
+    min-height: 100vh;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2rem 1.2rem;
+    display: grid;
+    grid-template-columns: minmax(300px, 1fr) minmax(320px, 420px);
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.auth-intro {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at 85% 15%, rgba(143, 204, 161, 0.32), transparent 38%),
+        linear-gradient(150deg, #f4fbf6 0%, #ebf5ee 100%);
+    padding: 1.4rem;
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: 0.9rem;
+    align-content: center;
+}
+
+.auth-kicker {
+    display: inline-flex;
+    width: fit-content;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #24533a;
+    border: 1px solid #bad8c0;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 0.3rem 0.5rem;
+    border-radius: 999px;
+}
+
+.auth-intro h1 {
+    font-family: "Fraunces", serif;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    color: #17452d;
+}
+
+.auth-intro p {
+    color: #365e49;
+    line-height: 1.45;
+}
+
+.auth-points {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.4rem;
+    color: #2f5542;
+    font-size: 0.92rem;
+}
+
+.auth-card {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: 1.2rem;
+    display: grid;
+    gap: 1rem;
+    align-content: center;
+}
+
+.auth-card-head h2 {
+    font-family: "Fraunces", serif;
+    font-size: 1.55rem;
+    color: #1f5638;
+    margin-bottom: 0.25rem;
+}
+
+.auth-card-head p {
+    color: var(--text-soft);
+    font-size: 0.9rem;
+}
+
+.auth-form {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.auth-form .btn {
+    margin-top: 0.15rem;
+    min-height: 42px;
+}
+
+.auth-footer {
+    color: #5b7468;
+    font-size: 0.82rem;
+}
+
 @media (max-width: 1024px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
@@ -515,5 +611,15 @@ textarea:focus {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
+    }
+
+    .auth-shell {
+        grid-template-columns: 1fr;
+        padding: 1rem 0.75rem;
+    }
+
+    .auth-intro,
+    .auth-card {
+        border-radius: 16px;
     }
 }

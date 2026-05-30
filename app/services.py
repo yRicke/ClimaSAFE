@@ -21,6 +21,21 @@ ATIVIDADES_PESADAS = {
     "operar máquina",
 }
 
+PALAVRAS_CHAVE_CUIDADO = (
+    "cardi",
+    "hiperten",
+    "diabet",
+    "renal",
+    "respirat",
+    "asma",
+    "ansiedad",
+    "depress",
+    "panic",
+    "insom",
+    "estresse",
+    "transtorno",
+)
+
 
 @dataclass
 class ClassificacaoRisco:
@@ -88,6 +103,7 @@ def classificar_risco(
     intensidade_atividade: int = 5,
     idade: int = 30,
     sexo: str = "",
+    detalhes_extras: str = "",
 ) -> ClassificacaoRisco:
     score = 0
 
@@ -138,11 +154,32 @@ def classificar_risco(
         max_exposicao = max(1.0, max_exposicao - 0.5)
         pausa = max(30, pausa - 15)
 
+    if _precisa_cuidado_adicional(detalhes_extras):
+        # Ajuste suave para aumentar margem de segurança sem mudar radicalmente o nível.
+        max_exposicao = max(1.0, max_exposicao - 0.5)
+        pausa = max(30, pausa - 15)
+
     return ClassificacaoRisco(
         nivel=nivel_map[score],
         max_exposicao_horas=max_exposicao,
         pausa_a_cada_min=pausa,
     )
+
+
+def _precisa_cuidado_adicional(detalhes_extras: str) -> bool:
+    texto = (detalhes_extras or "").strip().lower()
+    if not texto:
+        return False
+    return any(chave in texto for chave in PALAVRAS_CHAVE_CUIDADO)
+
+
+def _normalizar_detalhes_extras(detalhes_extras: str) -> str:
+    texto = " ".join((detalhes_extras or "").split()).strip().rstrip(".; ")
+    if not texto:
+        return ""
+    if len(texto) <= 120:
+        return texto
+    return f"{texto[:120].rsplit(' ', 1)[0]}..."
 
 
 def montar_texto_alerta_padrao(
@@ -152,15 +189,22 @@ def montar_texto_alerta_padrao(
     risco: ClassificacaoRisco,
     idade: int,
     sexo: str,
+    detalhes_extras: str,
 ) -> str:
     atividade = atividade_nome or "atividade operacional"
     sexo_texto = (sexo or "nao_informado").replace("_", " ")
     perfil = f"idade {idade} e sexo {sexo_texto}"
-    return (
+    texto_base = (
         f"{alvo_nome} não pode executar '{atividade}' (intensidade {intensidade_atividade}/10) por mais de "
         f"{risco.max_exposicao_horas:g}h seguidas, considerando perfil ({perfil}). "
         f"Sugestão: pausas de 5 min a cada {risco.pausa_a_cada_min} min."
     )
+
+    resumo_detalhes = _normalizar_detalhes_extras(detalhes_extras)
+    if not resumo_detalhes:
+        return texto_base
+
+    return f"{texto_base} Cuidados adicionais informados: {resumo_detalhes}."
 
 
 def montar_texto_alerta(
@@ -173,6 +217,7 @@ def montar_texto_alerta(
     tipo_alvo: str,
     idade: int,
     sexo: str,
+    detalhes_extras: str,
 ) -> str:
     contexto = {
         "tipo_alvo": tipo_alvo,
@@ -185,6 +230,7 @@ def montar_texto_alerta(
         "jornada_horas": jornada_horas,
         "idade": idade,
         "sexo": sexo or "nao_informado",
+        "detalhes_extras": _normalizar_detalhes_extras(detalhes_extras) or "nao_informado",
         "clima": localizacao.clima,
         "temperatura_c": float(localizacao.temperatura or 0),
         "umidade_percentual": int(localizacao.umidade or 0),
@@ -202,6 +248,7 @@ def montar_texto_alerta(
         risco=risco,
         idade=idade,
         sexo=sexo,
+        detalhes_extras=detalhes_extras,
     )
 
 
@@ -223,6 +270,7 @@ def gerar_alerta_colaborador(localizacao: Localizacao, colaborador: Colaborador)
         intensidade_atividade=intensidade,
         idade=colaborador.idade,
         sexo=colaborador.sexo,
+        detalhes_extras=colaborador.detalhes_extras,
     )
 
     texto = montar_texto_alerta(
@@ -235,6 +283,7 @@ def gerar_alerta_colaborador(localizacao: Localizacao, colaborador: Colaborador)
         tipo_alvo="colaborador",
         idade=colaborador.idade,
         sexo=colaborador.sexo,
+        detalhes_extras=colaborador.detalhes_extras,
     )
 
     return AlertaOperacional.objects.create(
@@ -256,6 +305,7 @@ def gerar_alerta_equipe(localizacao: Localizacao, equipe: Equipe) -> Optional[Al
     jornada_referencia = 8
     idade_referencia = 30
     sexo_referencia = "nao_informado"
+    detalhes_extras_referencia = ""
 
     for colaborador in colaboradores:
         atividade = _atividade_principal_colaborador(colaborador)
@@ -271,6 +321,7 @@ def gerar_alerta_equipe(localizacao: Localizacao, equipe: Equipe) -> Optional[Al
             intensidade_atividade=intensidade,
             idade=colaborador.idade,
             sexo=colaborador.sexo,
+            detalhes_extras=colaborador.detalhes_extras,
         )
 
         if maior_risco is None or _peso_nivel(risco.nivel) > _peso_nivel(maior_risco.nivel):
@@ -280,6 +331,7 @@ def gerar_alerta_equipe(localizacao: Localizacao, equipe: Equipe) -> Optional[Al
             jornada_referencia = colaborador.jornada_horas
             idade_referencia = colaborador.idade
             sexo_referencia = colaborador.sexo
+            detalhes_extras_referencia = colaborador.detalhes_extras
 
     if maior_risco is None:
         return None
@@ -294,6 +346,7 @@ def gerar_alerta_equipe(localizacao: Localizacao, equipe: Equipe) -> Optional[Al
         tipo_alvo="equipe",
         idade=idade_referencia,
         sexo=sexo_referencia,
+        detalhes_extras=detalhes_extras_referencia,
     )
 
     return AlertaOperacional.objects.create(
