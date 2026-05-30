@@ -57,4 +57,54 @@ def _run_migrations_once_on_vercel() -> None:
         raise
 
 
+def _ensure_superuser_on_vercel() -> None:
+    if os.getenv("VERCEL") != "1":
+        return
+
+    username = (os.getenv("VERCEL_SUPERUSER_USERNAME") or "").strip()
+    password = os.getenv("VERCEL_SUPERUSER_PASSWORD") or ""
+    email = (os.getenv("VERCEL_SUPERUSER_EMAIL") or "").strip()
+
+    if not username or not password:
+        print("[wsgi] superuser bootstrap skipped: missing VERCEL_SUPERUSER_USERNAME/PASSWORD")
+        return
+
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={
+            "email": email,
+            "is_staff": True,
+            "is_superuser": True,
+            "is_active": True,
+        },
+    )
+
+    changed = False
+    if email and user.email != email:
+        user.email = email
+        changed = True
+    if not user.is_staff:
+        user.is_staff = True
+        changed = True
+    if not user.is_superuser:
+        user.is_superuser = True
+        changed = True
+    if not user.is_active:
+        user.is_active = True
+        changed = True
+
+    user.set_password(password)
+    changed = True
+
+    if changed:
+        user.save()
+
+    action = "created" if created else "updated"
+    print(f"[wsgi] superuser {action}: {username}")
+
+
 _run_migrations_once_on_vercel()
+_ensure_superuser_on_vercel()
