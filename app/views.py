@@ -258,6 +258,18 @@ class AtividadeCreateView(LoginRequiredMixin, UserFormKwargsMixin, CreateView):
     template_name = "atividade_form.html"
     success_url = reverse_lazy("atividade_list")
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        atividade_ia = getattr(form, "atividade_gerada_ia", None)
+        if atividade_ia:
+            messages.success(
+                self.request,
+                f"Atividade gerada com IA: {atividade_ia['nome']} (intensidade {atividade_ia['intensidade']}/10).",
+            )
+        else:
+            messages.info(self.request, "Atividade salva com os dados preenchidos manualmente.")
+        return response
+
 
 class AtividadeUpdateView(LoginRequiredMixin, UserFormKwargsMixin, UpdateView):
     model = Atividade
@@ -267,6 +279,18 @@ class AtividadeUpdateView(LoginRequiredMixin, UserFormKwargsMixin, UpdateView):
 
     def get_queryset(self):
         return Atividade.objects.filter(colaborador__fazenda__usuario=self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        atividade_ia = getattr(form, "atividade_gerada_ia", None)
+        if atividade_ia:
+            messages.success(
+                self.request,
+                f"Atividade atualizada com IA: {atividade_ia['nome']} (intensidade {atividade_ia['intensidade']}/10).",
+            )
+        else:
+            messages.info(self.request, "Atividade atualizada com os dados preenchidos manualmente.")
+        return response
 
 
 @require_POST

@@ -133,6 +133,7 @@ MAP_TILE_URL = os.getenv("MAP_TILE_URL", "https://tile.openstreetmap.org/{z}/{x}
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_ALERTS_ENABLED = env_bool("OPENAI_ALERTS_ENABLED", True)
 OPENAI_ALERT_MODEL = os.getenv("OPENAI_ALERT_MODEL", "gpt-5.4-mini").strip() or "gpt-5.4-mini"
+OPENAI_ACTIVITY_MODEL = os.getenv("OPENAI_ACTIVITY_MODEL", OPENAI_ALERT_MODEL).strip() or OPENAI_ALERT_MODEL
 OPENAI_ALERT_REASONING_EFFORT = os.getenv("OPENAI_ALERT_REASONING_EFFORT", "low").strip().lower() or "low"
 OPENAI_ALERT_TEXT_VERBOSITY = os.getenv("OPENAI_ALERT_TEXT_VERBOSITY", "low").strip().lower() or "low"
 OPENAI_ALERT_TIMEOUT_SECONDS = env_float("OPENAI_ALERT_TIMEOUT_SECONDS", 20.0)

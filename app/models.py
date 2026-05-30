@@ -56,6 +56,10 @@ class Colaborador(models.Model):
 
 class Atividade(models.Model):
     colaborador = models.ForeignKey(Colaborador, on_delete=models.CASCADE, related_name="atividades")
+    descricao = models.TextField(
+        default="",
+        help_text="Descreva com clareza como essa atividade e executada no campo.",
+    )
     nome = models.CharField(max_length=150)
     intensidade = models.PositiveSmallIntegerField(
         default=5,

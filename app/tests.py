@@ -4,7 +4,9 @@ from unittest.mock import MagicMock, patch
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 
+from .forms import AtividadeForm
 from .models import Atividade, Colaborador, Fazenda, Localizacao
+from .openai_activity_service import gerar_atividade_por_descricao_openai
 from .openai_alert_service import gerar_texto_alerta_openai
 from .services import processar_alertas_fazenda
 
@@ -114,4 +116,90 @@ class AlertasOpenAITestCase(TestCase):
         texto = gerar_texto_alerta_openai({"alvo_nome": "João"})
 
         self.assertIsNone(texto)
+        mock_urlopen.assert_not_called()
+
+
+class AtividadeOpenAITestCase(TestCase):
+    def setUp(self):
+        self.usuario = User.objects.create_user(username="atividade-user", password="segredo")
+        self.fazenda = Fazenda.objects.create(usuario=self.usuario, nome="Fazenda Atividade")
+        self.colaborador = Colaborador.objects.create(
+            fazenda=self.fazenda,
+            nome="Carlos",
+            jornada_horas=8,
+        )
+
+    @patch("app.forms.gerar_atividade_por_descricao_openai")
+    def test_form_gera_nome_e_intensidade_com_ia(self, mock_gerar):
+        mock_gerar.return_value = {"nome": "capina manual", "intensidade": 8}
+        form = AtividadeForm(
+            data={
+                "colaborador": self.colaborador.id,
+                "descricao": "Capina manual com enxada durante toda a manha sob sol forte.",
+                "nome": "",
+                "intensidade": "",
+            },
+            user=self.usuario,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors.as_json())
+        self.assertEqual(form.cleaned_data["nome"], "capina manual")
+        self.assertEqual(form.cleaned_data["intensidade"], 8)
+
+    @patch("app.forms.gerar_atividade_por_descricao_openai", return_value=None)
+    def test_form_faz_fallback_manual_quando_ia_nao_retorna(self, _mock_gerar):
+        form = AtividadeForm(
+            data={
+                "colaborador": self.colaborador.id,
+                "descricao": "Operacao com pulverizador costal em ritmo constante.",
+                "nome": "pulverizacao",
+                "intensidade": 6,
+            },
+            user=self.usuario,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors.as_json())
+        self.assertEqual(form.cleaned_data["nome"], "pulverizacao")
+        self.assertEqual(form.cleaned_data["intensidade"], 6)
+
+    @override_settings(
+        OPENAI_API_KEY="chave-teste",
+        OPENAI_ALERTS_ENABLED=True,
+        OPENAI_ALERT_MODEL="gpt-5.4-mini",
+        OPENAI_ACTIVITY_MODEL="gpt-5.4-mini",
+        OPENAI_ALERT_REASONING_EFFORT="low",
+        OPENAI_ALERT_TEXT_VERBOSITY="low",
+        OPENAI_ALERT_TIMEOUT_SECONDS=12.5,
+    )
+    @patch("app.openai_activity_service.urlopen")
+    def test_gerar_atividade_por_descricao_openai_extrai_json(self, mock_urlopen):
+        resposta_api = {
+            "output": [
+                {
+                    "type": "message",
+                    "content": [
+                        {"type": "output_text", "text": '{"nome":"plantio de mudas","intensidade":7}'}
+                    ],
+                }
+            ]
+        }
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps(resposta_api).encode("utf-8")
+        mock_urlopen.return_value.__enter__.return_value = mock_response
+
+        atividade = gerar_atividade_por_descricao_openai(
+            "Plantio de mudas com abertura de covas, transporte de caixas e exposicao ao sol."
+        )
+
+        self.assertEqual(atividade, {"nome": "plantio de mudas", "intensidade": 7})
+        request = mock_urlopen.call_args.args[0]
+        payload = json.loads(request.data.decode("utf-8"))
+        self.assertEqual(payload["model"], "gpt-5.4-mini")
+        self.assertFalse(payload["store"])
+
+    @override_settings(OPENAI_API_KEY="", OPENAI_ALERTS_ENABLED=True)
+    @patch("app.openai_activity_service.urlopen")
+    def test_gerar_atividade_por_descricao_openai_retorna_none_sem_chave(self, mock_urlopen):
+        atividade = gerar_atividade_por_descricao_openai("Descricao detalhada")
+        self.assertIsNone(atividade)
         mock_urlopen.assert_not_called()

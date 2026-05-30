@@ -81,6 +81,7 @@ NOMINATIM_REVERSE_URL=https://nominatim.openstreetmap.org/reverse
 OPENAI_API_KEY=
 OPENAI_ALERTS_ENABLED=True
 OPENAI_ALERT_MODEL=gpt-5.4-mini
+OPENAI_ACTIVITY_MODEL=gpt-5.4-mini
 OPENAI_ALERT_REASONING_EFFORT=low
 OPENAI_ALERT_TEXT_VERBOSITY=low
 OPENAI_ALERT_TIMEOUT_SECONDS=20
@@ -89,7 +90,8 @@ OPENAI_ALERT_TIMEOUT_SECONDS=20
 Notas:
 
 - `OPENAI_API_KEY` é opcional. Se ficar vazio, o sistema continua funcionando e usa o texto padrão dos alertas.
-- `OPENAI_ALERT_MODEL=gpt-5.4-mini` é o padrão recomendado atualmente para esse caso de geração curta e rápida.
+- `OPENAI_ALERT_MODEL=gpt-5.4-mini` é o padrão recomendado para texto de alertas.
+- `OPENAI_ACTIVITY_MODEL=gpt-5.4-mini` é usado para gerar nome/intensidade da atividade a partir da descrição.
 
 ## 6. Aplicar as migrações
 
@@ -137,7 +139,7 @@ Você será redirecionado para o login e depois para o dashboard.
 
 1. Criar uma fazenda
 2. Cadastrar equipes e colaboradores
-3. Cadastrar atividades com intensidade
+3. Cadastrar atividades com uma descrição clara (a IA sugere nome e intensidade)
 4. Salvar a localização da fazenda no dashboard
 5. Processar os dados climáticos
 6. Processar os alertas operacionais

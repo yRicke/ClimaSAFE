@@ -17,6 +17,7 @@
             <thead>
                 <tr>
                     <th>Atividade</th>
+                    <th>Descricao</th>
                     <th>Intensidade</th>
                     <th>Colaborador</th>
                     <th>Ações</th>
@@ -26,6 +27,7 @@
             {% for atividade in atividades %}
                 <tr>
                     <td>{{ atividade.nome }}</td>
+                    <td>{{ atividade.descricao|default:"-" }}</td>
                     <td>{{ atividade.intensidade }}/10</td>
                     <td>{{ atividade.colaborador.nome }}</td>
                     <td class="actions">

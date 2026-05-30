@@ -5,10 +5,17 @@
 {% block content %}
 <section class="panel form-panel">
     <h2>{% if object %}Editar atividade{% else %}Nova atividade{% endif %}</h2>
-    <p class="hint">Defina intensidade de 1 a 10 para qualificar melhor o risco operacional.</p>
+    <p class="hint">
+        Descreva de forma clara como a atividade e executada (esforco fisico, ferramentas, ritmo e exposicao ao sol).
+        A IA usa essa descricao para gerar o nome e a intensidade automaticamente.
+    </p>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ form.colaborador.as_field_group }}
+        {{ form.descricao.as_field_group }}
+        {{ form.nome.as_field_group }}
+        {{ form.intensidade.as_field_group }}
+        <p class="hint">Se a IA nao responder, preencha nome e intensidade manualmente.</p>
         <div class="actions">
             <button type="submit" class="btn">Salvar</button>
             <a href="{% url 'atividade_list' %}" class="btn btn-light">Cancelar</a>
